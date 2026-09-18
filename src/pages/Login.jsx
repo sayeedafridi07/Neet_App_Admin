@@ -10,6 +10,7 @@ import CustomInputField from "../components/common/CustomInputField";
 import { login } from "../services/operations/authAPI";
 import logo from "../assets/images/logo.png";
 import backgroundImage from "../assets/images/bg.webp";
+import { loginSchema } from "../schemas/auth.schema";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
@@ -83,43 +84,28 @@ function Login() {
     }));
   };
 
-  const validateForm = (values) => {
-    const errors = {};
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!values.email) {
-      errors.email = "Email is required";
-    } else if (!emailRegex.test(values.email)) {
-      errors.email = "Invalid Email";
-    }
-
-    if (!values.password) {
-      errors.password = "Password is required";
-    } else if (values.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
-    }
-
-    return errors;
-  };
-
   const handleLogin = () => {
-    const validationErrors = validateForm(formData);
-
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length > 0) {
-      const errorMessages = Object.values(validationErrors).join("\n");
-
-      toast.error(errorMessages);
-
-      return;
-    }
-
-    loginMutation.mutate({
+    const result = loginSchema.safeParse({
       email: formData.email,
       password: formData.password,
     });
+
+    if (!result.success) {
+      const fieldErrors = {};
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0];
+
+        if (!fieldErrors[field]) {
+          fieldErrors[field] = issue.message;
+        }
+      });
+
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
+    loginMutation.mutate(result.data);
   };
 
   return (
