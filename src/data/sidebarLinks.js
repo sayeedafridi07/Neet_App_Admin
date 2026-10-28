@@ -38,7 +38,12 @@ export const sidebarLinks = [
     path: "chapters",
     icon: "FileText",
   },
-
+  {
+    id: 7,
+    name: "Subscription",
+    path: "subscriptions",
+    icon: "CreditCard",
+  },
   // {
   //   id: 4,
   //   name: "Audio Lectures",
@@ -56,11 +61,5 @@ export const sidebarLinks = [
   //   name: "MCQ Practice",
   //   path: "mcqs",
   //   icon: "NotebookPen",
-  // },
-  // {
-  //   id: 7,
-  //   name: "Subscription",
-  //   path: "subscriptions",
-  //   icon: "CreditCard",
   // },
 ];

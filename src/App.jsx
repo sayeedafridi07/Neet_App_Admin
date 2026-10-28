@@ -18,6 +18,7 @@ import Layout from "./components/layout/Layout";
 import { usePermissions } from "./hooks/usePermissions";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Subscriptions from "./components/core/subscriptions/Subscriptions";
 
 function App() {
   const { isSuperAdmin } = usePermissions();
@@ -62,32 +63,7 @@ function App() {
         <Route path="chapters" element={<Chapters />} />
         <Route path="chapters/:chapterSlug" element={<ChapterDetail />} />
 
-        {/* Academic Management */}
-        <Route path="academic">
-          <Route index element={<Navigate to="subjects" replace />} />
-
-          {/* Subject listing */}
-          <Route path="subjects" element={<Subjects />} />
-
-          {/* Selected subject → Classes */}
-
-          {/* Selected class → Chapters */}
-          <Route
-            path="subjects/:subjectSlug/:classSlug"
-            element={<Chapters />}
-          />
-
-          {/* Selected chapter → Detail */}
-          <Route
-            path="subjects/:subjectSlug/:classSlug/:chapterSlug"
-            element={<ChapterDetail />}
-          />
-        </Route>
-
-        <Route path="courses" element={<Course />} />
-        <Route path="courses/:courseId" element={<Quiz />} />
-        <Route path="test-series" element={<TestSeries />} />
-        <Route path="test-series/:testId" element={<Questions />} />
+        <Route path="subscriptions" element={<Subscriptions />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

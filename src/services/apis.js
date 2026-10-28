@@ -152,3 +152,11 @@ export const programEndpoints = {
   UPDATE_PROGRAM_STATUS_API: "/programs",
   DELETE_PROGRAM_API: "/programs",
 };
+
+export const subscriptionEndpoints = {
+  GET_SUBSCRIPTIONS_API: "/subscriptions",
+  CREATE_SUBSCRIPTION_API: "/subscriptions",
+  UPDATE_SUBSCRIPTION_API: "/subscriptions",
+  UPDATE_SUBSCRIPTION_STATUS_API: "/subscriptions",
+  DELETE_SUBSCRIPTION_API: "/subscriptions",
+};
