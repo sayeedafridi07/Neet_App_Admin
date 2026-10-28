@@ -19,13 +19,14 @@ export const getAudioLectures = async (chapterId, params) => {
   return response.data;
 };
 
-// Multipart upload: lecture fields + the audio file under "audio"
-export const createAudioLecture = async (body, audioFile) => {
+// Multipart upload: lecture fields + the audio file under "audio", optional cover under "image"
+export const createAudioLecture = async (body, audioFile, imageFile) => {
   const formData = new FormData();
   Object.entries(body).forEach(([key, value]) => {
     if (value !== undefined) formData.append(key, value);
   });
   formData.append("audio", audioFile);
+  if (imageFile) formData.append("image", imageFile);
 
   const response = await apiConnector({
     method: "POST",
@@ -38,13 +39,14 @@ export const createAudioLecture = async (body, audioFile) => {
   return response.data;
 };
 
-// Multipart update: audio file is optional (only sent when replaced)
-export const updateAudioLecture = async (id, body, audioFile) => {
+// Multipart update: audio and image are optional (only sent when replaced)
+export const updateAudioLecture = async (id, body, audioFile, imageFile) => {
   const formData = new FormData();
   Object.entries(body).forEach(([key, value]) => {
     if (value !== undefined) formData.append(key, value);
   });
   if (audioFile) formData.append("audio", audioFile);
+  if (imageFile) formData.append("image", imageFile);
 
   const response = await apiConnector({
     method: "PATCH",

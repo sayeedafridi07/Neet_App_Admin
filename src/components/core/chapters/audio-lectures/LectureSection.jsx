@@ -41,10 +41,10 @@ function LectureSection({ chapterId, chapterName }) {
   // ─── Add / Edit ───────────────────────────────────────────────────────────
   const { mutateAsync: saveLectureMutation, isPending: isSaving } = useMutation(
     {
-      mutationFn: ({ id, body, audio }) =>
+      mutationFn: ({ id, body, audio, image }) =>
         id
-          ? updateAudioLecture(id, body, audio)
-          : createAudioLecture(body, audio),
+          ? updateAudioLecture(id, body, audio, image)
+          : createAudioLecture(body, audio, image),
       onSuccess: (_, { id }) => {
         toast.success(
           id ? "Lecture updated successfully" : "Lecture uploaded successfully",
@@ -58,9 +58,9 @@ function LectureSection({ chapterId, chapterName }) {
   );
 
   // Returns true on success so the modal knows to close itself
-  const handleSaveLecture = async (body, audio) => {
+  const handleSaveLecture = async (body, audio, image) => {
     try {
-      await saveLectureMutation({ id: lecture?.id, body, audio });
+      await saveLectureMutation({ id: lecture?.id, body, audio, image });
       return true;
     } catch {
       return false;

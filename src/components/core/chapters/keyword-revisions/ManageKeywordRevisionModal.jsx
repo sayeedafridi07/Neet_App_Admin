@@ -12,6 +12,13 @@ import MiniAudioPlayer from "../../../common/players/MiniAudioPlayer";
 
 // Keyword revisions are short clips
 const MAX_AUDIO_SIZE_MB = 20;
+const MAX_IMAGE_SIZE_MB = 5;
+// Defined once so the dropzone doesn't see a new object every render
+const IMAGE_ACCEPT = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+};
 
 const initialState = {
   title: "",
@@ -19,6 +26,7 @@ const initialState = {
   order: "1",
   duration: "",
   audio: null,
+  image: null,
 };
 
 // The API expects duration in seconds, so read it from the file's metadata
@@ -48,6 +56,7 @@ const Form = ({
   setErrors,
   isEdit,
   existingAudioUrl,
+  existingImageUrl,
 }) => {
   // Preview the newly picked file; fall back to the saved audio when editing
   const previewUrl = useMemo(
@@ -128,6 +137,20 @@ const Form = ({
             error={errors.audio}
           />
         )}
+        <FileDropzone
+          label="Cover Image"
+          // A freshly picked file wins; otherwise show the saved image
+          value={formData.image || existingImageUrl}
+          onChange={(file) => {
+            setFormData((prev) => ({ ...prev, image: file }));
+            setErrors((prev) => ({ ...prev, image: "" }));
+          }}
+          accept={IMAGE_ACCEPT}
+          maxFileSize={MAX_IMAGE_SIZE_MB}
+          helperText={`JPG, PNG or WEBP, up to ${MAX_IMAGE_SIZE_MB}MB`}
+          invalidTypeMessage="Only JPG, PNG and WEBP images are allowed"
+          error={errors.image}
+        />
         <CustomInputField
           label="Title"
           isMandatory={true}
@@ -176,6 +199,7 @@ const ModalContent = ({ onClose, chapterId, loading, onSubmit, revision }) => {
           order: revision.order != null ? String(revision.order) : "",
           duration: "",
           audio: null,
+          image: null,
         }
       : initialState,
   );
@@ -186,7 +210,8 @@ const ModalContent = ({ onClose, chapterId, loading, onSubmit, revision }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { audio, description, duration, existingRemoved, ...rest } = formData;
+    const { audio, image, description, duration, existingRemoved, ...rest } =
+      formData;
     const result = isEdit
       ? updateKeywordRevisionSchema.safeParse({
           ...rest,
@@ -224,7 +249,7 @@ const ModalContent = ({ onClose, chapterId, loading, onSubmit, revision }) => {
 
     setErrors({});
 
-    const success = await onSubmit(result.data, audio);
+    const success = await onSubmit(result.data, audio, image);
 
     if (success) {
       handleClose();
@@ -263,6 +288,7 @@ const ModalContent = ({ onClose, chapterId, loading, onSubmit, revision }) => {
           setErrors={setErrors}
           isEdit={isEdit}
           existingAudioUrl={revision?.audioUrl}
+          existingImageUrl={revision?.imageUrl}
         />
         <div className="mt-8 flex flex-row items-center justify-end space-x-4 px-4">
           <CustomButton

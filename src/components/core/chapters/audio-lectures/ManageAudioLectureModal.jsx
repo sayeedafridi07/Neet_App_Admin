@@ -11,12 +11,20 @@ import Icon from "../../../common/Icon";
 import MiniAudioPlayer from "../../../common/players/MiniAudioPlayer";
 
 const MAX_AUDIO_SIZE_MB = 100;
+const MAX_IMAGE_SIZE_MB = 5;
+// Defined once so the dropzone doesn't see a new object every render
+const IMAGE_ACCEPT = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+};
 
 const initialState = {
   title: "",
   description: "",
   order: "1",
   audio: null,
+  image: null,
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Component ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,6 +35,7 @@ const Form = ({
   setErrors,
   isEdit,
   existingAudioUrl,
+  existingImageUrl,
 }) => {
   // Preview the newly picked file; fall back to the saved audio when editing
   const previewUrl = useMemo(
@@ -96,6 +105,20 @@ const Form = ({
             error={errors.audio}
           />
         )}
+        <FileDropzone
+          label="Cover Image"
+          // A freshly picked file wins; otherwise show the saved image
+          value={formData.image || existingImageUrl}
+          onChange={(file) => {
+            setFormData((prev) => ({ ...prev, image: file }));
+            setErrors((prev) => ({ ...prev, image: "" }));
+          }}
+          accept={IMAGE_ACCEPT}
+          maxFileSize={MAX_IMAGE_SIZE_MB}
+          helperText={`JPG, PNG or WEBP, up to ${MAX_IMAGE_SIZE_MB}MB`}
+          invalidTypeMessage="Only JPG, PNG and WEBP images are allowed"
+          error={errors.image}
+        />
         {/* New lectures take the chapter name; it can be renamed later */}
         {isEdit && (
           <CustomInputField
@@ -153,6 +176,7 @@ const ModalContent = ({
           description: lecture.description ?? "",
           order: lecture.order != null ? String(lecture.order) : "",
           audio: null,
+          image: null,
         }
       : { ...initialState, title: chapterName ?? "" },
   );
@@ -163,7 +187,7 @@ const ModalContent = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { audio, description, existingRemoved, ...rest } = formData;
+    const { audio, image, description, existingRemoved, ...rest } = formData;
     const result = isEdit
       ? updateAudioLectureSchema.safeParse({
           ...rest,
@@ -195,7 +219,7 @@ const ModalContent = ({
 
     setErrors({});
 
-    const success = await onSubmit(result.data, audio);
+    const success = await onSubmit(result.data, audio, image);
 
     if (success) {
       handleClose();
@@ -234,6 +258,7 @@ const ModalContent = ({
           setErrors={setErrors}
           isEdit={isEdit}
           existingAudioUrl={lecture?.audioUrl}
+          existingImageUrl={lecture?.imageUrl}
         />
         <div className="mt-8 flex flex-row items-center justify-end space-x-4 px-4">
           <CustomButton

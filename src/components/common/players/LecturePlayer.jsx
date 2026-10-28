@@ -4,9 +4,9 @@ import Icon from "../Icon";
 import SeekBar from "./SeekBar";
 import { formatTime, useAudioPlayer } from "./useAudioPlayer";
 
-// TODO: remove once lectures have their own cover image
+// Fallback when a lecture or keyword has no cover image of its own
 export const PLACEHOLDER_COVER =
-  "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=600&auto=format&fit=crop";
+  "https://images.unsplash.com/photo-1494232410401-ad00d5433cfa?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D";
 
 // Spotify-style "now playing" card with a custom audio player
 function LecturePlayer({ lecture, actions }) {

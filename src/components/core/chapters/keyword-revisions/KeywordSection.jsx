@@ -107,10 +107,10 @@ function KeywordSection({ chapterId }) {
 
   const { mutateAsync: saveKeywordMutation, isPending: isSaving } = useMutation(
     {
-      mutationFn: ({ id, body, audio }) =>
+      mutationFn: ({ id, body, audio, image }) =>
         id
-          ? updateKeywordRevision(id, body, audio)
-          : createKeywordRevision(body, audio),
+          ? updateKeywordRevision(id, body, audio, image)
+          : createKeywordRevision(body, audio, image),
       onSuccess: (_, { id }) => {
         toast.success(
           id ? "Keyword updated successfully" : "Keyword uploaded successfully",
@@ -124,9 +124,9 @@ function KeywordSection({ chapterId }) {
   );
 
   // Returns true on success so the modal knows to close itself
-  const handleSaveKeyword = async (body, audio) => {
+  const handleSaveKeyword = async (body, audio, image) => {
     try {
-      await saveKeywordMutation({ id: selectedItem?.id, body, audio });
+      await saveKeywordMutation({ id: selectedItem?.id, body, audio, image });
       return true;
     } catch {
       return false;
