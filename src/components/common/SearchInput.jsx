@@ -24,7 +24,7 @@ function SearchInput({
 
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
-            <div className="relative max-w-md flex-1">
+            <div className="relative w-full">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <Search className="h-5 w-5 text-gray-400" />
                 </div>

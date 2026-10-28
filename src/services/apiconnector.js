@@ -99,6 +99,7 @@ export const apiConnector = async ({
   bodyData,
   headers = {},
   params = {},
+  timeout,
 }) => {
   const response = await axiosInstance({
     method,
@@ -106,6 +107,7 @@ export const apiConnector = async ({
     data: bodyData,
     headers,
     params,
+    ...(timeout !== undefined && { timeout }),
   });
 
   return response;

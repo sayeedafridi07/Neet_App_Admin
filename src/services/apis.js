@@ -20,6 +20,57 @@ export const adminEndpoints = {
   DELETE_ADMIN_API: "/admins",
 };
 
+export const subjectEndpoints = {
+  GET_SUBJECTS_API: "/subjects",
+  CREATE_SUBJECT_API: "/subjects",
+  UPDATE_SUBJECT_API: "/subjects",
+  UPDATE_SUBJECT_STATUS_API: "/subjects",
+  DELETE_SUBJECT_API: "/subjects",
+};
+
+// Classes are listed under a subject: /subjects/:subjectId/classes
+export const classEndpoints = {
+  GET_CLASSES_API: "/classes",
+  CREATE_CLASS_API: "/classes",
+  UPDATE_CLASS_API: "/classes",
+  DELETE_CLASS_API: "/classes",
+};
+
+// Chapters are listed/created under a class: /classes/:classId/chapters
+export const chapterEndpoints = {
+  GET_CHAPTERS_API: "/chapters",
+  GET_CHAPTER_BY_SLUG_API: "/chapters/slug",
+  CREATE_CHAPTER_API: "/chapters",
+  UPDATE_CHAPTER_API: "/chapters",
+  DELETE_CHAPTER_API: "/chapters",
+};
+
+// Audio lectures are listed under a chapter: /audio-lectures?chapterId=
+export const audioLectureEndpoints = {
+  GET_AUDIO_LECTURES_API: "/audio-lectures",
+  CREATE_AUDIO_LECTURE_API: "/audio-lectures",
+  UPDATE_AUDIO_LECTURE_API: "/audio-lectures",
+  UPDATE_AUDIO_LECTURE_STATUS_API: "/audio-lectures",
+  DELETE_AUDIO_LECTURE_API: "/audio-lectures",
+};
+
+// Keyword revisions are listed under a chapter: /keyword-revisions?chapterId=
+export const keywordRevisionEndpoints = {
+  GET_KEYWORD_REVISIONS_API: "/keyword-revisions",
+  CREATE_KEYWORD_REVISION_API: "/keyword-revisions",
+  UPDATE_KEYWORD_REVISION_API: "/keyword-revisions",
+  UPDATE_KEYWORD_REVISION_STATUS_API: "/keyword-revisions",
+  DELETE_KEYWORD_REVISION_API: "/keyword-revisions",
+};
+
+// Chapter quizzes are listed under a chapter: /quizzes?chapterId=&type=CHAPTER
+export const chapterQuizEndpoints = {
+  GET_CHAPTER_QUIZZES_API: "/quizzes",
+  CREATE_CHAPTER_QUIZ_API: "/quizzes",
+  UPDATE_CHAPTER_QUIZ_API: "/quizzes",
+  DELETE_CHAPTER_QUIZ_API: "/quizzes",
+};
+
 // PROFILE ENDPOINTS
 export const profileEndpoints = {
   GET_USER_DETAILS_API: "/auth/me",

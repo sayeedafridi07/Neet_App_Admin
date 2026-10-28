@@ -1,0 +1,53 @@
+  <Route
+            path="subjects/:subjectId/classes"
+            element={<SubjectClasses />}
+          />
+
+          {/* Selected class → Chapters */}
+          <Route path="classes/:classId/chapters" element={<ClassChapters />} />
+
+          {/* Selected chapter → Workspace */}
+          <Route path="chapters/:chapterId" element={<ChapterWorkspace />} />
+
+          {/* Chapter content */}
+          <Route
+            path="chapters/:chapterId/audio-lectures"
+            element={<AudioLectures />}
+          />
+
+          <Route
+            path="chapters/:chapterId/keyword-revisions"
+            element={<KeywordRevisions />}
+          />
+
+
+
+
+<Route path="academics">
+  <Route path="subjects" element={<Subjects />} />
+
+  <Route
+    path="subjects/:subjectId/classes"
+    element={<SubjectClasses />}
+  />
+
+  <Route
+    path="classes/:classId/chapters"
+    element={<ClassChapters />}
+  />
+
+  <Route
+    path="chapters/:chapterId"
+    element={<ChapterWorkspace />}
+  />
+
+  <Route
+    path="chapters/:chapterId/audio-lectures"
+    element={<AudioLectures />}
+  />
+
+  <Route
+    path="chapters/:chapterId/keyword-revisions"
+    element={<KeywordRevisions />}
+  />
+</Route>

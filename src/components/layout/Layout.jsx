@@ -50,12 +50,15 @@ function Layout() {
           />
         </div>
         <main
-          className={`flex-1 overflow-x-hidden overflow-y-auto rounded-2xl md:border border-gray-200 transition-all duration-300 ease-in-out`}
+          className={`flex flex-1 flex-col overflow-x-hidden overflow-y-auto rounded-2xl md:border border-gray-200 transition-all duration-300 ease-in-out`}
         >
-          <div className="p-4">
+          <div className="flex-1 p-4">
             <Breadcrumbs />
             <Outlet />
           </div>
+
+          {/* Pages portal bottom bars (e.g. audio player) here; flex-1 above keeps it at the bottom */}
+          <div id="bottom-bar-slot" className="sticky bottom-0 z-20 empty:hidden" />
 
         </main>
       </div>
