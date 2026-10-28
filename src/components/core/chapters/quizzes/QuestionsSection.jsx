@@ -169,7 +169,7 @@ function QuestionsSection({ chapterId }) {
   const actions = (
     <div className="flex flex-wrap gap-2">
       <CustomButton
-        title="Import .docx"
+        title="Upload Questions"
         iconName="FileUp"
         onClick={() => setShowImportModal(true)}
         className="text-primary! border-primary border bg-transparent"
