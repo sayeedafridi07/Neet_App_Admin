@@ -60,21 +60,43 @@ export const getQuizQuestions = async (quizId, params) => {
   return response.data;
 };
 
-export const createQuizQuestion = async (quizId, body) => {
+// Plain JSON unless an image is attached; then multipart with the image under
+// "image" and nested fields (options) JSON-encoded, since FormData is flat
+const toQuestionRequest = (body, imageFile) => {
+  if (!imageFile) return { bodyData: body };
+
+  const formData = new FormData();
+  Object.entries(body).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    formData.append(
+      key,
+      typeof value === "object" ? JSON.stringify(value) : value,
+    );
+  });
+  formData.append("image", imageFile);
+
+  return {
+    bodyData: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 0,
+  };
+};
+
+export const createQuizQuestion = async (quizId, body, imageFile) => {
   const response = await apiConnector({
     method: "POST",
     url: questionsUrl(quizId),
-    bodyData: body,
+    ...toQuestionRequest(body, imageFile),
   });
 
   return response.data;
 };
 
-export const updateQuizQuestion = async (quizId, id, body) => {
+export const updateQuizQuestion = async (quizId, id, body, imageFile) => {
   const response = await apiConnector({
     method: "PATCH",
     url: `${questionsUrl(quizId)}/${id}`,
-    bodyData: body,
+    ...toQuestionRequest(body, imageFile),
   });
 
   return response.data;

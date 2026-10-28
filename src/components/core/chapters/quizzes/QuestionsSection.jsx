@@ -33,9 +33,6 @@ import { EmptyState, SectionCard } from "../shared";
 const tableColumns = [
   "SNO",
   "Question",
-  "Options",
-  "Correct Answer",
-  "Explanation",
   "Status",
   "Action",
 ];
@@ -86,10 +83,10 @@ function QuestionsSection({ chapterId }) {
   };
 
   const { mutateAsync: saveQuestion, isPending: isSaving } = useMutation({
-    mutationFn: (body) =>
+    mutationFn: ({ body, image }) =>
       editingQuestion
-        ? updateQuizQuestion(quizId, editingQuestion.id, body)
-        : createQuizQuestion(quizId, body),
+        ? updateQuizQuestion(quizId, editingQuestion.id, body, image)
+        : createQuizQuestion(quizId, body, image),
     onSuccess: () => {
       toast.success(
         editingQuestion
@@ -104,9 +101,9 @@ function QuestionsSection({ chapterId }) {
   });
 
   // Returns true on success so the modal knows to close itself
-  const handleSave = async (body) => {
+  const handleSave = async (body, image) => {
     try {
-      await saveQuestion(body);
+      await saveQuestion({ body, image });
       return true;
     } catch {
       return false;
@@ -226,34 +223,68 @@ function QuestionsSection({ chapterId }) {
             </THead>
             <TBody>
               {questions.map((question, index) => {
-                const correctIndex =
-                  question.options?.findIndex((option) => option.isCorrect) ??
-                  -1;
                 return (
                   <TR key={question.id}>
                     {/* S.No. accounts for current page offset */}
                     <TD>{(page - 1) * limit + index + 1}</TD>
-                    <TD className="text-text max-w-md min-w-72 text-sm font-medium whitespace-normal!">
+                    <TD className="text-text max-w-xl min-w-96 text-sm font-medium whitespace-normal!">
                       <MarkdownRenderer>{question.question}</MarkdownRenderer>
-                    </TD>
-                    <TD className="text-text text-sm">
-                      {question.options?.map((option, i) => (
-                        <div key={option.id ?? i} className="flex gap-1">
-                          <span>{optionLabel(i)}.</span>
-                          <MarkdownRenderer>{option.text}</MarkdownRenderer>
+                      {/* Thumbnail; click opens the full-size image */}
+                      {question.imageUrl && (
+                        <a
+                          href={question.imageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 inline-block"
+                        >
+                          <img
+                            src={question.imageUrl}
+                            alt="Question"
+                            loading="lazy"
+                            className="border-border max-h-32 max-w-full rounded-lg border object-contain"
+                          />
+                        </a>
+                      )}
+                      {/* Options as cards; the correct one is highlighted */}
+                      <div className="mt-3 space-y-2">
+                        {question.options?.map((option, i) => (
+                          <div
+                            key={option.id ?? i}
+                            className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
+                              option.isCorrect
+                                ? "border-success bg-success/10 text-success"
+                                : "border-border bg-surface text-textSecondary"
+                            }`}
+                          >
+                            {option.isCorrect ? (
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success text-onPrimary">
+                                <Icon name="Check" size={12} />
+                              </span>
+                            ) : (
+                              <span className="h-5 w-5 shrink-0 rounded-full border border-border" />
+                            )}
+                            <span className="font-semibold text-textMuted">
+                              {optionLabel(i)}.
+                            </span>
+                            <div
+                              className={
+                                option.isCorrect ? "font-medium" : "font-normal"
+                              }
+                            >
+                              <MarkdownRenderer>{option.text}</MarkdownRenderer>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {question.explanation && (
+                        <div className="mt-3 rounded-xl border border-border bg-background px-3 py-2 font-normal">
+                          <p className="mb-1 text-primary text-xs font-semibold uppercase">
+                            Explanation
+                          </p>
+                          <MarkdownRenderer>
+                            {question.explanation}
+                          </MarkdownRenderer>
                         </div>
-                      ))}
-                    </TD>
-                    <TD className="text-text text-sm">
-                      {correctIndex >= 0 ? optionLabel(correctIndex) : "-"}
-                    </TD>
-                    <TD className="text-text max-w-md min-w-60 text-sm whitespace-normal!">
-                      {question.explanation ? (
-                        <MarkdownRenderer>
-                          {question.explanation}
-                        </MarkdownRenderer>
-                      ) : (
-                        "-"
                       )}
                     </TD>
                     <TD>

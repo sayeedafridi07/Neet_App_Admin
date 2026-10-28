@@ -3,12 +3,20 @@ import toast from "react-hot-toast";
 import { quizQuestionSchema } from "../../../../schemas/quizQuestion.schema";
 import { normalizeMarkdown } from "../../../../utils/markdown";
 import CustomButton from "../../../common/CustomButton";
+import FileDropzone from "../../../common/FileDropzone";
 import Icon from "../../../common/Icon";
 import MarkdownEditor from "../../../common/MarkdownEditor";
 import Radio from "../../../common/Radio";
 
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
+const MAX_IMAGE_SIZE_MB = 5;
+// Defined once so the dropzone doesn't see a new object every render
+const IMAGE_ACCEPT = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+};
 
 const emptyOptions = () =>
   Array.from({ length: 4 }, () => ({ text: "", isCorrect: false }));
@@ -23,6 +31,7 @@ const toFormState = (question) => ({
         isCorrect,
       }))
     : emptyOptions(),
+  image: null,
 });
 
 const toPayload = ({ question, explanation, options }) => ({
@@ -99,7 +108,7 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
     }
 
     setErrors({});
-    const success = await onSubmit(result.data);
+    const success = await onSubmit(result.data, formData.image);
     if (success) onClose();
   };
 
@@ -135,6 +144,18 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
             onChange={(value) => setField("question", value)}
             placeholder="Type the question. Use $x^2$ for formulas, $$...$$ for block formulas, and | pipes | for tables."
             error={errors.question}
+          />
+
+          <FileDropzone
+            label="Question Image"
+            // A freshly picked file wins; otherwise show the saved image
+            value={formData.image || question?.imageUrl}
+            onChange={(file) => setField("image", file)}
+            accept={IMAGE_ACCEPT}
+            maxFileSize={MAX_IMAGE_SIZE_MB}
+            helperText={`JPG, PNG or WEBP, up to ${MAX_IMAGE_SIZE_MB}MB`}
+            invalidTypeMessage="Only JPG, PNG and WEBP images are allowed"
+            error={errors.image}
           />
 
           {/* Options */}
