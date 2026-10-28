@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Icon from "../../../common/Icon";
 import CustomButton from "../../../common/CustomButton";
 import FileDropzone from "../../../common/FileDropzone";
@@ -84,7 +84,7 @@ const UploadQuestionModal = ({ isOpen, onClose, loading, onSubmit }) => {
         */}
 
         {/* File Upload */}
-        <div className="rounded-xl border border-sky-500 bg-white p-4 shadow-md md:p-6">
+        <div className="rounded-xl border border-primary p-4 shadow-md md:p-6">
           <FileDropzone
             label="Upload File"
             required

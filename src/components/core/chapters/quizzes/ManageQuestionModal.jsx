@@ -1,9 +1,10 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { quizQuestionSchema } from "../../../../schemas/quizQuestion.schema";
+import { normalizeMarkdown } from "../../../../utils/markdown";
 import CustomButton from "../../../common/CustomButton";
-import CustomInputField from "../../../common/CustomInputField";
 import Icon from "../../../common/Icon";
+import MarkdownEditor from "../../../common/MarkdownEditor";
 import Radio from "../../../common/Radio";
 
 const MIN_OPTIONS = 2;
@@ -14,10 +15,13 @@ const emptyOptions = () =>
 
 // Turn a saved question into editable form state
 const toFormState = (question) => ({
-  question: question?.question ?? "",
-  explanation: question?.explanation ?? "",
+  question: normalizeMarkdown(question?.question ?? ""),
+  explanation: normalizeMarkdown(question?.explanation ?? ""),
   options: question?.options?.length
-    ? question.options.map(({ text, isCorrect }) => ({ text, isCorrect }))
+    ? question.options.map(({ text, isCorrect }) => ({
+        text: normalizeMarkdown(text),
+        isCorrect,
+      }))
     : emptyOptions(),
 });
 
@@ -40,9 +44,6 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
-
-  const handleOnChange = (event) =>
-    setField(event.target.name, event.target.value);
 
   const updateOption = (index, changes) => {
     setFormData((prev) => ({
@@ -127,14 +128,12 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
         </div>
 
         <div className="border-primary space-y-5 rounded-lg border p-4 md:p-6">
-          <CustomInputField
+          <MarkdownEditor
             label="Question"
             isMandatory={true}
-            name="question"
-            multiline
             value={formData.question}
-            onChange={handleOnChange}
-            placeholder="Type the question"
+            onChange={(value) => setField("question", value)}
+            placeholder="Type the question. Use $x^2$ for formulas, $$...$$ for block formulas, and | pipes | for tables."
             error={errors.question}
           />
 
@@ -156,7 +155,7 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
               )}
             </div>
             {errors.options && (
-              <p className="text-xs text-red-500">{errors.options}</p>
+              <p className="text-error text-xs">{errors.options}</p>
             )}
 
             {formData.options.map((option, index) => (
@@ -168,13 +167,13 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
                   />
                 </div>
                 <div className="flex-1">
-                  <CustomInputField
+                  <MarkdownEditor
                     value={option.text}
-                    onChange={(e) =>
-                      updateOption(index, { text: e.target.value })
-                    }
+                    onChange={(text) => updateOption(index, { text })}
                     placeholder={`${String.fromCharCode(65 + index)}.`}
                     error={errors[`options.${index}`]}
+                    height={90}
+                    hideToolbar
                   />
                 </div>
                 <button
@@ -193,14 +192,13 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
             ))}
           </div>
 
-          <CustomInputField
+          <MarkdownEditor
             label="Explanation"
-            name="explanation"
-            multiline
             value={formData.explanation}
-            onChange={handleOnChange}
+            onChange={(value) => setField("explanation", value)}
             placeholder="Why the answer is correct (optional)"
             error={errors.explanation}
+            height={160}
           />
         </div>
 

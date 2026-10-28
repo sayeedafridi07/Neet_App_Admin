@@ -13,6 +13,7 @@ import {
 import CustomButton from "../../../common/CustomButton";
 import DeleteModal from "../../../common/DeleteModal";
 import Icon from "../../../common/Icon";
+import MarkdownRenderer from "../../../common/MarkdownRenderer";
 import Pagination from "../../../common/Pagination";
 import SearchInput from "../../../common/SearchInput";
 import {
@@ -25,8 +26,8 @@ import {
   TR,
 } from "../../../common/Table";
 import ToggleSwitch from "../../../common/ToggleSwitch";
-import ImportQuestionsModal from "./ImportQuestionsModal";
 import ManageQuestionModal from "./ManageQuestionModal";
+import UploadQuestionModal from "./UploadQuestionModal";
 import { EmptyState, SectionCard } from "../shared";
 
 const tableColumns = [
@@ -34,6 +35,7 @@ const tableColumns = [
   "Question",
   "Options",
   "Correct Answer",
+  "Explanation",
   "Status",
   "Action",
 ];
@@ -120,15 +122,18 @@ function QuestionsSection({ chapterId }) {
     },
   });
 
-  // Import errors list every unreadable question, so show them in the modal
+  // Import errors list every unreadable question, one per line
   const handleImport = async (file) => {
     try {
       await importQuestions(file);
-      return null;
+      return true;
     } catch (error) {
-      return (
-        error?.response?.data?.message || "Could not import questions"
-      ).replaceAll("; ", "\n");
+      toast.error(
+        (
+          error?.response?.data?.message || "Could not import questions"
+        ).replaceAll("; ", "\n"),
+      );
+      return false;
     }
   };
 
@@ -178,11 +183,7 @@ function QuestionsSection({ chapterId }) {
   );
 
   return (
-    <SectionCard
-      icon="ListChecks"
-      title="Questions"
-      action={actions}
-    >
+    <SectionCard icon="ListChecks" title="Questions" action={actions}>
       {(quiz.questionCount > 0 || query.search) && (
         <div className="mb-4">
           <SearchInput
@@ -232,18 +233,28 @@ function QuestionsSection({ chapterId }) {
                   <TR key={question.id}>
                     {/* S.No. accounts for current page offset */}
                     <TD>{(page - 1) * limit + index + 1}</TD>
-                    <TD className="text-text max-w-md text-sm font-medium whitespace-pre-line">
-                      {question.question}
+                    <TD className="text-text max-w-md min-w-72 text-sm font-medium whitespace-normal!">
+                      <MarkdownRenderer>{question.question}</MarkdownRenderer>
                     </TD>
                     <TD className="text-text text-sm">
                       {question.options?.map((option, i) => (
-                        <p key={option.id ?? i}>
-                          {optionLabel(i)}. {option.text}
-                        </p>
+                        <div key={option.id ?? i} className="flex gap-1">
+                          <span>{optionLabel(i)}.</span>
+                          <MarkdownRenderer>{option.text}</MarkdownRenderer>
+                        </div>
                       ))}
                     </TD>
                     <TD className="text-text text-sm">
                       {correctIndex >= 0 ? optionLabel(correctIndex) : "-"}
+                    </TD>
+                    <TD className="text-text max-w-md min-w-60 text-sm whitespace-normal!">
+                      {question.explanation ? (
+                        <MarkdownRenderer>
+                          {question.explanation}
+                        </MarkdownRenderer>
+                      ) : (
+                        "-"
+                      )}
                     </TD>
                     <TD>
                       <ToggleSwitch
@@ -336,7 +347,7 @@ function QuestionsSection({ chapterId }) {
         onSubmit={handleSave}
       />
 
-      <ImportQuestionsModal
+      <UploadQuestionModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         loading={isImporting}
