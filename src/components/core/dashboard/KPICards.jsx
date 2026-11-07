@@ -2,49 +2,45 @@ import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../../../hooks/usePermissions";
 import Icon from "../../common/Icon";
 
-const KPICards = ({ data, period }) => {
+const KPICards = ({ data }) => {
   const navigate = useNavigate();
   const { isSuperAdmin } = usePermissions();
   
+  const num = (v) =>
+    typeof v === "number" ? v : (v?.total ?? v?.count ?? 0);
+  const formatINR = (paise = 0) =>
+    `₹${(paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
   const kpiCardsConfig = [
     {
-      title: "Total Users",
-      value: data?.users?.current || 0,
-      trend: `${data?.users?.trend || 0}%`,
-      trendText: `vs ${period}`,
-      isPositive: data?.users?.isIncrease ?? true,
+      title: "Total Students",
+      value: num(data?.users),
+      subText: `${data?.users?.newThisMonth ?? 0} new this month`,
       route: "students",
     },
-    ...(isSuperAdmin ? [{
-      title: "Total Admins",
-      value: data?.admins?.current || 0,
-      trend: `${data?.admins?.trend || 0}%`,
-      trendText: `vs ${period}`,
-      isPositive: data?.admins?.isIncrease ?? true,
-      route: "admins",
-    }] : []),
+    ...(isSuperAdmin
+      ? [
+          {
+            title: "Total Admins",
+            value: num(data?.admins),
+            route: "admins",
+          },
+        ]
+      : []),
     {
-      title: "Total Courses",
-      value: data?.courses?.current || 0,
-      trend: `${data?.courses?.trend || 0}%`,
-      trendText: `vs ${period}`,
-      isPositive: data?.courses?.isIncrease ?? true,
-      route: "/",
-    },
-    {
-      title: "Total Programs",
-      value: data?.programs?.current || 0,
-      trend: `${data?.programs?.trend || 0}%`,
-      trendText: `vs ${period}`,
-      isPositive: data?.programs?.isIncrease ?? true,
+      title: "Active Subscribers",
+      value: num(data?.activeSubscribers),
       route: "/",
     },
     {
       title: "Quiz Attempts",
-      value: data?.quizAttempts?.current || 0,
-      trend: `${data?.quizAttempts?.trend || 0}%`,
-      trendText: `vs ${period}`,
-      isPositive: data?.quizAttempts?.isIncrease ?? true,
+      value: num(data?.quizAttempts),
+      route: "/",
+    },
+    {
+      title: "Revenue",
+      value: formatINR(data?.revenue?.total ?? data?.totalRevenue ?? 0),
+      subText: `${formatINR(data?.revenue?.thisMonth ?? data?.thisMonthRevenue ?? 0)} this month`,
       route: "/",
     },
   ];
@@ -76,24 +72,11 @@ const KPICards = ({ data, period }) => {
               </p>
             </div>
 
-            {/* Bottom: Compact Trend Indicator */}
-            <div className="flex items-center gap-2">
-              <div
-                className={`flex items-center gap-0.5 text-xs font-bold ${card.isPositive
-                    ? "text-green-600"
-                    : "text-red-500"
-                  }`}
-              >
-                <span>{card.trend}</span>
-                <Icon
-                  name={card.isPositive ? "TrendingUp" : "TrendingDown"}
-                  size={14}
-                />
-              </div>
+            {card.subText && (
               <span className="text-textSecondary text-xs font-medium">
-                {card.trendText}
+                {card.subText}
               </span>
-            </div>
+            )}
           </div>
         );
       })}

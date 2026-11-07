@@ -1,47 +1,63 @@
+import { useQuery } from "@tanstack/react-query";
+import moment from "moment";
+import { useState } from "react";
+
+import {
+  getActiveUsers,
+  getDashboardOverview,
+  getUserTrends,
+} from "../../../services/operations/dashboardAPI";
 import ChartCard from "../charts/ChartCard";
 import CustomAreaChart from "../charts/CustomAreaChart";
 import CustomBarChart from "../charts/CustomBarChart";
 import CustomDonutChart from "../charts/CustomDonutChart";
 import KPICards from "./KPICards";
 
+const ACTIVE_DAYS = 30;
+const INACTIVE_AFTER_DAYS = 30;
+
 const Dashboard = () => {
-  const data = {
-    period: "last month",
-    kpis: {
-      users: { current: 1248, trend: 12.5, isIncrease: true },
-      admins: { current: 18, trend: 4.2, isIncrease: true },
-      courses: { current: 36, trend: 8.7, isIncrease: true },
-      programs: { current: 24, trend: 6.4, isIncrease: true },
-      quizAttempts: { current: 4820, trend: 15.8, isIncrease: true },
-    },
-    userDistribution: [
-      { name: "Active Users", value: 986 },
-      { name: "Inactive Users", value: 262 },
-    ],
-  };
+  const [year, setYear] = useState(new Date().getFullYear());
 
+  const { data: overviewRes } = useQuery({
+    queryKey: ["dashboard", "overview"],
+    queryFn: getDashboardOverview,
+  });
+
+  const { data: trendsRes } = useQuery({
+    queryKey: ["dashboard", "user-trends", year],
+    queryFn: () => getUserTrends({ year }),
+  });
+
+  const { data: activeRes } = useQuery({
+    queryKey: ["dashboard", "active-users", ACTIVE_DAYS, INACTIVE_AFTER_DAYS],
+    queryFn: () =>
+      getActiveUsers({
+        days: ACTIVE_DAYS,
+        inactiveAfterDays: INACTIVE_AFTER_DAYS,
+      }),
+  });
+
+  const overview = overviewRes?.data || {};
+  const trends = trendsRes?.data || {};
+  const active = activeRes?.data || {};
+
+  const availableYears = trends.availableYears || trends.years || [year];
+
+  const userGrowth = (trends.monthly || trends.months || []).map((m) => ({
+    name: m.monthName || moment().month((m.month ?? 1) - 1).format("MMM"),
+    value: m.newUsers ?? 0,
+  }));
+
+  const dau = (active.series || active.daily || []).map((d) => ({
+    name: moment(d.date).format("DD MMM"),
+    value: d.activeUsers ?? d.count ?? 0,
+  }));
+
+  const users = overview.users || {};
   const userDistributionData = [
-    ...data.userDistribution,
-  ];
-
-  const userGrowth = [
-    { name: "Jan", value: 120 },
-    { name: "Feb", value: 210 },
-    { name: "Mar", value: 240 },
-    { name: "Apr", value: 260 },
-    { name: "May", value: 300 },
-    { name: "Jun", value: 340 },
-    { name: "Jul", value: 410 },
-  ];
-
-  const dau = [
-    { name: "Mon", value: 45 },
-    { name: "Tue", value: 60 },
-    { name: "Wed", value: 72 },
-    { name: "Thu", value: 70 },
-    { name: "Fri", value: 90 },
-    { name: "Sat", value: 120 },
-    { name: "Sun", value: 145 },
+    { name: "Active Students", value: users.active ?? 0 },
+    { name: "Inactive Students", value: users.inactive ?? 0 },
   ];
 
   return (
@@ -54,26 +70,41 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="col-span-1 lg:col-span-4">
-          <KPICards data={data?.kpis} period={data?.period} />
+          <KPICards data={overview} />
         </div>
 
         <ChartCard
           className="col-span-1 lg:col-span-4"
-          title="User Growth Over Time"
+          title={
+            <span className="flex items-center justify-between gap-4">
+              <span>New Students per Month</span>
+              <select
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="rounded-lg border border-gray-200 px-2 py-1 text-sm"
+              >
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </span>
+          }
         >
           <CustomAreaChart data={userGrowth} color="var(--color-primary)" />
         </ChartCard>
 
         <ChartCard
           className="col-span-1 lg:col-span-2"
-          title="Daily Active Users"
+          title={`Daily Active Students (last ${ACTIVE_DAYS} days)`}
         >
           <CustomBarChart data={dau} color="var(--color-secondary)" />
         </ChartCard>
 
         <ChartCard
           className="col-span-1 lg:col-span-2"
-          title="Active vs Inactive Users"
+          title="Active vs Inactive Students"
         >
           <CustomDonutChart
             data={userDistributionData}

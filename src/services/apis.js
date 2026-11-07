@@ -79,6 +79,9 @@ export const profileEndpoints = {
 // DASHBOARD ENDPOINTS
 export const dashboardEndpoints = {
   GET_DASHBOARD_DATA_API: "/dashboard",
+  GET_OVERVIEW_API: "/dashboard/overview",
+  GET_USER_TRENDS_API: "/dashboard/user-trends",
+  GET_ACTIVE_USERS_API: "/dashboard/active-users",
 };
 
 // USER ENDPOINTS

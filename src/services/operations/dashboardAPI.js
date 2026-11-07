@@ -1,29 +1,30 @@
-import { toast } from "react-hot-toast";
-
-import { setLoading, setToken } from "../../slices/authSlice";
-import { setData } from "../../slices/dashboardSlice";
 import { apiConnector } from "../apiconnector";
 import { dashboardEndpoints } from "../apis";
 
-const { GET_DASHBOARD_DATA_API } = dashboardEndpoints;
+const { GET_OVERVIEW_API, GET_USER_TRENDS_API, GET_ACTIVE_USERS_API } =
+  dashboardEndpoints;
 
-export function getDashboardData(token) {
-    return async (dispatch, getState) => {
-        dispatch(setLoading(true));
-        try {
-            const response = await apiConnector("GET", GET_DASHBOARD_DATA_API, null, {
-                Authorization: `Bearer ${token}`,
-            });
+export const getDashboardOverview = async () => {
+  const response = await apiConnector({ method: "GET", url: GET_OVERVIEW_API });
+  return response.data;
+};
 
-            if (!response?.data?.success) {
-                throw new Error(response?.data?.message);
-            }
+// params: { year }
+export const getUserTrends = async (params) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: GET_USER_TRENDS_API,
+    params,
+  });
+  return response.data;
+};
 
-            dispatch(setData(response?.data?.data));
-        } catch (error) {
-            console.error("Error fetching dashboard data:", error);
-            toast.error(error?.response?.data?.message || "Failed to fetch dashboard data");
-        }
-        dispatch(setLoading(false));
-    };
-}
+// params: { days, inactiveAfterDays }
+export const getActiveUsers = async (params) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: GET_ACTIVE_USERS_API,
+    params,
+  });
+  return response.data;
+};
