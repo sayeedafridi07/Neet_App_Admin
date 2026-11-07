@@ -3,7 +3,6 @@ import { Search, Users } from "lucide-react";
 import { useState } from "react";
 
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../../../hooks/usePermissions";
 import {
   deleteStudent,
@@ -13,6 +12,7 @@ import {
 } from "../../../services/operations/studentAPI";
 import CustomButton from "../../common/CustomButton";
 import DeleteModal from "../../common/DeleteModal";
+import ManageStudentModal from "./ManageStudentModal";
 import Icon from "../../common/Icon";
 import Pagination from "../../common/Pagination";
 import SearchInput from "../../common/SearchInput";
@@ -46,7 +46,7 @@ const tableColumns = [
 
 function Student() {
   const { isSuperAdmin } = usePermissions();
-  const navigate = useNavigate();
+  const [manageModal, setManageModal] = useState({ open: false, data: null });
   const queryClient = useQueryClient();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -148,7 +148,7 @@ function Student() {
         <CustomButton
           title="Add Student"
           iconName="Plus"
-          onClick={() => navigate(`manage-student`)}
+          onClick={() => setManageModal({ open: true, data: null })}
         />
       </div>
 
@@ -231,7 +231,7 @@ function Student() {
                     <div className="flex gap-2">
                       <button
                         onClick={() =>
-                          navigate(`manage-student`, { state: student })
+                          setManageModal({ open: true, data: student })
                         }
                         className="group hover:bg-primary/10 cursor-pointer rounded-full p-2 transition"
                         title="Edit"
@@ -319,6 +319,13 @@ function Student() {
           )}
         </div>
       )}
+
+      {/* Add / Edit Modal */}
+      <ManageStudentModal
+        isOpen={manageModal.open}
+        data={manageModal.data}
+        onClose={() => setManageModal({ open: false, data: null })}
+      />
 
       {/* Delete Modal */}
       <DeleteModal

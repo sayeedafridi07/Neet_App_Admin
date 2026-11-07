@@ -141,7 +141,7 @@ function Subjects() {
       {/* Header */}
       <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-roboto text-text text-xl font-semibold md:text-3xl">
-          Subjects
+          Subject Management
         </h1>
         <CustomButton
           title="Add Subject"

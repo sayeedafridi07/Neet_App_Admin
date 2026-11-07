@@ -3,7 +3,6 @@ import { Search, Users } from "lucide-react";
 import { useState } from "react";
 
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
 import { usePermissions } from "../../../hooks/usePermissions";
 import {
   deleteAdmin,
@@ -12,6 +11,7 @@ import {
 } from "../../../services/operations/adminAPI";
 import CustomButton from "../../common/CustomButton";
 import DeleteModal from "../../common/DeleteModal";
+import ManageAdminModal from "./ManageAdminModal";
 import Icon from "../../common/Icon";
 import Pagination from "../../common/Pagination";
 import SearchInput from "../../common/SearchInput";
@@ -40,7 +40,7 @@ const tableColumns = [
 
 function Admin() {
   const { isSuperAdmin } = usePermissions();
-  const navigate = useNavigate();
+  const [manageModal, setManageModal] = useState({ open: false, data: null });
   const queryClient = useQueryClient();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -127,7 +127,7 @@ function Admin() {
         <CustomButton
           title="Add Admin"
           iconName="Plus"
-          onClick={() => navigate(`manage-admin`)}
+          onClick={() => setManageModal({ open: true, data: null })}
         />
       </div>
 
@@ -199,7 +199,7 @@ function Admin() {
                     <div className="flex gap-2">
                       <button
                         onClick={() =>
-                          navigate(`manage-admin`, { state: admin })
+                          setManageModal({ open: true, data: admin })
                         }
                         className="group hover:bg-primary/10 cursor-pointer rounded-full p-2 transition"
                         title="Edit"
@@ -274,6 +274,13 @@ function Admin() {
           )}
         </div>
       )}
+
+      {/* Add / Edit Modal */}
+      <ManageAdminModal
+        isOpen={manageModal.open}
+        data={manageModal.data}
+        onClose={() => setManageModal({ open: false, data: null })}
+      />
 
       {/* Delete Modal */}
       <DeleteModal

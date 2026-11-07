@@ -191,7 +191,7 @@ function Chapters() {
       <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <h1 className="font-roboto text-text text-xl font-semibold md:text-3xl">
-            Chapters
+            Chapter Management
           </h1>
         </div>
         <CustomButton

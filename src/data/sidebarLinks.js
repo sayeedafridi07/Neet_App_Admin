@@ -40,7 +40,7 @@ export const sidebarLinks = [
   },
   {
     id: 7,
-    name: "Subscription",
+    name: "Subscription Management",
     path: "subscriptions",
     icon: "CreditCard",
   },
