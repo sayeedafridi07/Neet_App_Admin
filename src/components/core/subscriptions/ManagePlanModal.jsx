@@ -1,20 +1,21 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import {
-  createSubscriptionSchema,
-  updateSubscriptionSchema,
+  subscriptionPlanSchema,
+  toRupees,
 } from "../../../schemas/subscription.schema";
 import CustomButton from "../../common/CustomButton";
 import CustomInputField from "../../common/CustomInputField";
 import Icon from "../../common/Icon";
-import ToggleSwitch from "../../common/ToggleSwitch";
 
 const initialState = {
   name: "",
   description: "",
   price: "",
-  durationInDays: "",
-  isActive: true,
+  originalPrice: "",
+  durationDays: "",
+  features: "",
+  order: 0,
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Component ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,27 +62,49 @@ const Form = ({ formData, setFormData, errors, setErrors }) => {
             name="price"
             value={formData.price}
             onChange={handleOnChange}
-            placeholder="e.g. 999"
+            placeholder="e.g. 499"
             indicatorText="INR"
             error={errors.price}
+          />
+          <CustomInputField
+            label="Original Price"
+            type="number"
+            name="originalPrice"
+            value={formData.originalPrice}
+            onChange={handleOnChange}
+            placeholder="e.g. 999 (shown struck-through)"
+            indicatorText="INR"
+            error={errors.originalPrice}
           />
           <CustomInputField
             label="Duration"
             isMandatory={true}
             type="number"
-            name="durationInDays"
-            value={formData.durationInDays}
+            name="durationDays"
+            value={formData.durationDays}
             onChange={handleOnChange}
             placeholder="e.g. 365"
             indicatorText="Days"
-            error={errors.durationInDays}
+            error={errors.durationDays}
+          />
+          <CustomInputField
+            label="Display Order"
+            type="number"
+            name="order"
+            value={formData.order}
+            onChange={handleOnChange}
+            placeholder="e.g. 0"
+            error={errors.order}
           />
         </div>
-        <ToggleSwitch
-          label="Active"
-          name="isActive"
-          checked={formData.isActive}
+        <CustomInputField
+          label="Features (one per line)"
+          name="features"
+          value={formData.features}
           onChange={handleOnChange}
+          placeholder={"Audio lectures\nTest series"}
+          error={errors.features}
+          multiline
         />
       </div>
     </div>
@@ -97,9 +120,12 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
       ? {
           name: data.name || "",
           description: data.description || "",
-          price: data.price ?? "",
-          durationInDays: data.durationInDays ?? "",
-          isActive: data.isActive ?? true,
+          price: data.price != null ? toRupees(data.price) : "",
+          originalPrice:
+            data.originalPrice != null ? toRupees(data.originalPrice) : "",
+          durationDays: data.durationDays ?? "",
+          features: (data.features || []).join("\n"),
+          order: data.order ?? 0,
         }
       : initialState,
   );
@@ -110,10 +136,13 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const schema = isEditMode
-      ? updateSubscriptionSchema
-      : createSubscriptionSchema;
-    const result = schema.safeParse(formData);
+    const result = subscriptionPlanSchema.safeParse({
+      ...formData,
+      features: formData.features
+        .split("\n")
+        .map((f) => f.trim())
+        .filter(Boolean),
+    });
 
     if (!result.success) {
       const fieldErrors = {};
@@ -149,7 +178,7 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
       >
         <div className="mb-8 flex flex-row items-center justify-between gap-4 border-b border-gray-200 pb-4">
           <h1 className="text-text text-xl font-semibold">
-            {isEditMode ? "Edit Subscription" : "Add Subscription"}
+            {isEditMode ? "Edit Plan" : "Add Plan"}
           </h1>
           <button
             type="button"
@@ -186,7 +215,7 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
   );
 };
 
-const ManageSubscriptionModal = ({ isOpen, ...props }) => {
+const ManagePlanModal = ({ isOpen, ...props }) => {
   if (!isOpen) {
     return null;
   }
@@ -194,4 +223,4 @@ const ManageSubscriptionModal = ({ isOpen, ...props }) => {
   return <ModalContent {...props} />;
 };
 
-export default ManageSubscriptionModal;
+export default ManagePlanModal;

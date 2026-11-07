@@ -18,27 +18,82 @@ const IMAGE_ACCEPT = {
   "image/webp": [".webp"],
 };
 
-const emptyOptions = () =>
-  Array.from({ length: 4 }, () => ({ text: "", isCorrect: false }));
+const newOption = () => ({
+  text: "",
+  isCorrect: false,
+  imageUrl: null,
+  imageFile: null,
+});
+
+const emptyOptions = () => Array.from({ length: 4 }, newOption);
 
 // Turn a saved question into editable form state
 const toFormState = (question) => ({
   question: normalizeMarkdown(question?.question ?? ""),
   explanation: normalizeMarkdown(question?.explanation ?? ""),
   options: question?.options?.length
-    ? question.options.map(({ text, isCorrect }) => ({
+    ? question.options.map(({ id, text, isCorrect, imageUrl }) => ({
+        id,
         text: normalizeMarkdown(text),
         isCorrect,
+        imageUrl: imageUrl ?? null,
+        imageFile: null,
       }))
     : emptyOptions(),
   image: null,
+  explanationImageUrl: question?.explanationImageUrl ?? null,
+  explanationImage: null,
 });
 
-const toPayload = ({ question, explanation, options }) => ({
+// Saved images are referenced by option id; a cleared one is flagged for removal
+const toPayload = ({
+  question,
+  explanation,
+  options,
+  explanationImageUrl,
+  explanationImage,
+}, saved) => ({
   question,
   explanation: explanation.trim() || null,
-  options,
+  options: options.map(({ id, text, isCorrect, imageUrl, imageFile }) => {
+    const hadImage = !!saved?.options?.find((o) => o.id === id)?.imageUrl;
+    return {
+      ...(id && { id }),
+      text,
+      isCorrect,
+      ...(hadImage && !imageUrl && !imageFile && { removeImage: true }),
+      hasImage: !!(imageUrl || imageFile),
+    };
+  }),
+  ...(saved?.explanationImageUrl &&
+    !explanationImageUrl &&
+    !explanationImage && { removeExplanationImage: true }),
 });
+
+// Compact image picker with a remove control, shared by options and explanation
+const ImageField = ({ label, file, url, onChange, onRemove }) => (
+  <div className="mt-2 space-y-1">
+    <FileDropzone
+      label={label}
+      // A freshly picked file wins; otherwise show the saved image
+      value={file || url}
+      onChange={onChange}
+      accept={IMAGE_ACCEPT}
+      maxFileSize={MAX_IMAGE_SIZE_MB}
+      helperText={`JPG, PNG or WEBP, up to ${MAX_IMAGE_SIZE_MB}MB`}
+      invalidTypeMessage="Only JPG, PNG and WEBP images are allowed"
+    />
+    {(file || url) && (
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-error cursor-pointer text-xs font-semibold hover:underline"
+      >
+        Remove image
+      </button>
+    )}
+  </div>
+);
 
 // Map zod paths onto the fields the form actually shows
 const fieldForPath = ([root, index]) =>
@@ -78,7 +133,7 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
   const addOption = () =>
     setFormData((prev) => ({
       ...prev,
-      options: [...prev.options, { text: "", isCorrect: false }],
+      options: [...prev.options, newOption()],
     }));
 
   const removeOption = (index) => {
@@ -95,7 +150,8 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = quizQuestionSchema.safeParse(toPayload(formData));
+    const payload = toPayload(formData, question);
+    const result = quizQuestionSchema.safeParse(payload);
     if (!result.success) {
       const fieldErrors = {};
       result.error.issues.forEach((err) => {
@@ -108,7 +164,26 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
     }
 
     setErrors({});
-    const success = await onSubmit(result.data, formData.image);
+    // hasImage only drives validation; the backend doesn't take it.
+    // The schema strips removeExplanationImage, so carry it over from payload
+    const body = {
+      ...result.data,
+      options: result.data.options.map((option) => {
+        const { hasImage, ...rest } = option; // eslint-disable-line no-unused-vars
+        return rest;
+      }),
+      ...(payload.removeExplanationImage && { removeExplanationImage: true }),
+    };
+    const optionImages = Object.fromEntries(
+      formData.options
+        .map((option, index) => [index, option.imageFile])
+        .filter(([, file]) => file),
+    );
+    const success = await onSubmit(body, {
+      image: formData.image,
+      explanationImage: formData.explanationImage,
+      optionImages,
+    });
     if (success) onClose();
   };
 
@@ -196,6 +271,15 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
                     height={90}
                     hideToolbar
                   />
+                  <ImageField
+                    label={`Option ${String.fromCharCode(65 + index)} Image`}
+                    file={option.imageFile}
+                    url={option.imageUrl}
+                    onChange={(imageFile) => updateOption(index, { imageFile })}
+                    onRemove={() =>
+                      updateOption(index, { imageFile: null, imageUrl: null })
+                    }
+                  />
                 </div>
                 <button
                   type="button"
@@ -220,6 +304,19 @@ const ModalContent = ({ onClose, loading, onSubmit, question }) => {
             placeholder="Why the answer is correct (optional)"
             error={errors.explanation}
             height={160}
+          />
+          <ImageField
+            label="Explanation Image"
+            file={formData.explanationImage}
+            url={formData.explanationImageUrl}
+            onChange={(file) => setField("explanationImage", file)}
+            onRemove={() =>
+              setFormData((prev) => ({
+                ...prev,
+                explanationImage: null,
+                explanationImageUrl: null,
+              }))
+            }
           />
         </div>
 

@@ -30,15 +30,27 @@ import ManageQuestionModal from "./ManageQuestionModal";
 import UploadQuestionModal from "./UploadQuestionModal";
 import { EmptyState, SectionCard } from "../shared";
 
-const tableColumns = [
-  "SNO",
-  "Question",
-  "Status",
-  "Action",
-];
+const tableColumns = ["SNO", "Question", "Status", "Action"];
 
 // Plain letter: "(c)" renders as a © ligature in some fonts
 const optionLabel = (index) => String.fromCharCode(65 + index);
+
+// Thumbnail; click opens the full-size image
+const Thumbnail = ({ src, alt }) => (
+  <a
+    href={src}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="mt-2 inline-block"
+  >
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      className="border-border max-h-32 max-w-full rounded-lg border bg-white object-contain"
+    />
+  </a>
+);
 
 function QuestionsSection({ chapterId }) {
   const { isSuperAdmin } = usePermissions();
@@ -83,10 +95,10 @@ function QuestionsSection({ chapterId }) {
   };
 
   const { mutateAsync: saveQuestion, isPending: isSaving } = useMutation({
-    mutationFn: ({ body, image }) =>
+    mutationFn: ({ body, files }) =>
       editingQuestion
-        ? updateQuizQuestion(quizId, editingQuestion.id, body, image)
-        : createQuizQuestion(quizId, body, image),
+        ? updateQuizQuestion(quizId, editingQuestion.id, body, files)
+        : createQuizQuestion(quizId, body, files),
     onSuccess: () => {
       toast.success(
         editingQuestion
@@ -101,9 +113,9 @@ function QuestionsSection({ chapterId }) {
   });
 
   // Returns true on success so the modal knows to close itself
-  const handleSave = async (body, image) => {
+  const handleSave = async (body, files) => {
     try {
-      await saveQuestion({ body, image });
+      await saveQuestion({ body, files });
       return true;
     } catch {
       return false;
@@ -180,7 +192,12 @@ function QuestionsSection({ chapterId }) {
   );
 
   return (
-    <SectionCard icon="ListChecks" title="Questions" action={actions}>
+    <SectionCard
+      icon="ListChecks"
+      title="Questions"
+      subtitle={`${quiz.questionCount ?? 0} question${quiz.questionCount === 1 ? "" : "s"}`}
+      action={actions}
+    >
       {(quiz.questionCount > 0 || query.search) && (
         <div className="mb-4">
           <SearchInput
@@ -231,59 +248,68 @@ function QuestionsSection({ chapterId }) {
                       <MarkdownRenderer>{question.question}</MarkdownRenderer>
                       {/* Thumbnail; click opens the full-size image */}
                       {question.imageUrl && (
-                        <a
-                          href={question.imageUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 inline-block"
-                        >
-                          <img
-                            src={question.imageUrl}
-                            alt="Question"
-                            loading="lazy"
-                            className="border-border max-h-32 max-w-full rounded-lg border object-contain"
-                          />
-                        </a>
+                        <Thumbnail src={question.imageUrl} alt="Question" />
                       )}
                       {/* Options as cards; the correct one is highlighted */}
                       <div className="mt-3 space-y-2">
                         {question.options?.map((option, i) => (
-                          <div
-                            key={option.id ?? i}
-                            className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
-                              option.isCorrect
-                                ? "border-success bg-success/10 text-success"
-                                : "border-border bg-surface text-textSecondary"
-                            }`}
-                          >
-                            {option.isCorrect ? (
-                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success text-onPrimary">
-                                <Icon name="Check" size={12} />
-                              </span>
-                            ) : (
-                              <span className="h-5 w-5 shrink-0 rounded-full border border-border" />
-                            )}
-                            <span className="font-semibold text-textMuted">
-                              {optionLabel(i)}.
-                            </span>
+                          <div key={option.id ?? i}>
                             <div
-                              className={
-                                option.isCorrect ? "font-medium" : "font-normal"
-                              }
+                              className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
+                                option.isCorrect
+                                  ? "border-success bg-success/10 text-success"
+                                  : "border-border bg-surface text-textSecondary"
+                              }`}
                             >
-                              <MarkdownRenderer>{option.text}</MarkdownRenderer>
+                              {option.isCorrect ? (
+                                <span className="bg-success text-onPrimary flex h-5 w-5 shrink-0 items-center justify-center rounded-full">
+                                  <Icon name="Check" size={12} />
+                                </span>
+                              ) : (
+                                <span className="border-border h-5 w-5 shrink-0 rounded-full border" />
+                              )}
+                              <span className="text-textMuted font-semibold">
+                                {optionLabel(i)}.
+                              </span>
+                              <div
+                                className={
+                                  option.isCorrect
+                                    ? "font-medium"
+                                    : "font-normal"
+                                }
+                              >
+                                <MarkdownRenderer>
+                                  {option.text}
+                                </MarkdownRenderer>
+                              </div>
                             </div>
+                            {/* Outside the card so the highlight doesn't tint the image */}
+                            {option.imageUrl && (
+                              <div className="pl-11">
+                                <Thumbnail
+                                  src={option.imageUrl}
+                                  alt={`Option ${optionLabel(i)}`}
+                                />
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
-                      {question.explanation && (
-                        <div className="mt-3 rounded-xl border border-border bg-background px-3 py-2 font-normal">
-                          <p className="mb-1 text-primary text-xs font-semibold uppercase">
+                      {(question.explanation ||
+                        question.explanationImageUrl) && (
+                        <div className="border-border bg-background mt-3 rounded-xl border px-3 py-2 font-normal">
+                          <p className="text-primary mb-1 text-xs font-semibold uppercase">
                             Explanation
                           </p>
                           <MarkdownRenderer>
                             {question.explanation}
                           </MarkdownRenderer>
+                          {question.explanationImageUrl && (
+                            <Thumbnail
+                              src={question.explanationImageUrl}
+                              alt="Explanation"
+                            />
+                          )}
                         </div>
                       )}
                     </TD>

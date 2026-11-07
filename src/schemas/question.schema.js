@@ -13,7 +13,7 @@ const optionSchema = z
     if (!hasText && !hasImage) {
       ctx.addIssue({
         path: ["text"],
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Option must contain text or image",
       });
     }
@@ -23,7 +23,6 @@ const createQuestionSchema = z
   .object({
     questionText: z.string().trim().optional().default(""),
     questionImage: z.any().optional(),
-    type: z.enum(["single", "multi"]).default("single"),
     options: z
       .array(optionSchema)
       .min(2, "At least 2 options are required")
@@ -42,7 +41,7 @@ const createQuestionSchema = z
     if (!hasQuestionText && !hasQuestionImage) {
       ctx.addIssue({
         path: ["questionText"],
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Question must contain text or image",
       });
     }
@@ -54,33 +53,17 @@ const createQuestionSchema = z
     if (hasInvalidIndex) {
       ctx.addIssue({
         path: ["correctAnswers"],
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Correct answer index is out of options range",
       });
     }
 
-    if (data.type === "single" && data.correctAnswers.length !== 1) {
-      ctx.addIssue({
-        path: ["correctAnswers"],
-        code: z.ZodIssueCode.custom,
-        message: "Single type question must have exactly one correct answer",
-      });
-    }
-
-    if (data.type === "multi" && data.correctAnswers.length < 2) {
-      ctx.addIssue({
-        path: ["correctAnswers"],
-        code: z.ZodIssueCode.custom,
-        message: "Multi type question must have at least two correct answers",
-      });
-    }
   });
 
 const updateQuestionSchema = z
   .object({
     questionText: z.string().trim().optional(),
     questionImage: z.any().optional(),
-    type: z.enum(["single", "multi"]).optional(),
     options: z
       .array(optionSchema)
       .min(2, "At least 2 options are required")
@@ -98,26 +81,8 @@ const updateQuestionSchema = z
       if (!hasQuestionText && !hasQuestionImage) {
         ctx.addIssue({
           path: ["questionText"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Question must contain text or image",
-        });
-      }
-    }
-
-    if (data.type && data.correctAnswers) {
-      if (data.type === "single" && data.correctAnswers.length !== 1) {
-        ctx.addIssue({
-          path: ["correctAnswers"],
-          code: z.ZodIssueCode.custom,
-          message: "Single type question must have exactly one correct answer",
-        });
-      }
-
-      if (data.type === "multi" && data.correctAnswers.length < 2) {
-        ctx.addIssue({
-          path: ["correctAnswers"],
-          code: z.ZodIssueCode.custom,
-          message: "Multi type question must have at least two correct answers",
         });
       }
     }
@@ -130,7 +95,7 @@ const updateQuestionSchema = z
       if (hasInvalidIndex) {
         ctx.addIssue({
           path: ["correctAnswers"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Correct answer index is out of options range",
         });
       }

@@ -1,58 +1,64 @@
 import { apiConnector } from "../apiconnector";
-import { subscriptionEndpoints } from "../apis";
+import { subscriptionPlanEndpoints } from "../apis";
 
-const {
-  GET_SUBSCRIPTIONS_API,
-  CREATE_SUBSCRIPTION_API,
-  UPDATE_SUBSCRIPTION_API,
-  DELETE_SUBSCRIPTION_API,
-  UPDATE_SUBSCRIPTION_STATUS_API,
-} = subscriptionEndpoints;
+const { SUBSCRIPTION_PLANS_API } = subscriptionPlanEndpoints;
 
-export const getSubscriptions = async (params) => {
+// ─── Subscription Plans ─────────────────────────────────────────────────────
+// Note: all prices are in paise on the API side.
+
+export const getSubscriptionPlans = async (params) => {
   const response = await apiConnector({
     method: "GET",
-    url: GET_SUBSCRIPTIONS_API,
+    url: SUBSCRIPTION_PLANS_API,
     params,
   });
 
   return response.data;
 };
 
-export const createSubscription = async (body) => {
+export const getSubscriptionPlanById = async (id) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: `${SUBSCRIPTION_PLANS_API}/${id}`,
+  });
+
+  return response.data;
+};
+
+export const createSubscriptionPlan = async (body) => {
   const response = await apiConnector({
     method: "POST",
-    url: CREATE_SUBSCRIPTION_API,
+    url: SUBSCRIPTION_PLANS_API,
     bodyData: body,
   });
 
   return response.data;
 };
 
-export const updateSubscription = async (id, body) => {
+export const updateSubscriptionPlan = async (id, body) => {
   const response = await apiConnector({
     method: "PATCH",
-    url: `${UPDATE_SUBSCRIPTION_API}/${id}`,
+    url: `${SUBSCRIPTION_PLANS_API}/${id}`,
     bodyData: body,
   });
 
   return response.data;
 };
 
-export const deleteSubscription = async (id) => {
+// Flips isActive server-side; no body
+export const toggleSubscriptionPlanStatus = async (id) => {
+  const response = await apiConnector({
+    method: "PATCH",
+    url: `${SUBSCRIPTION_PLANS_API}/${id}/status`,
+  });
+
+  return response.data;
+};
+
+export const deleteSubscriptionPlan = async (id) => {
   const response = await apiConnector({
     method: "DELETE",
-    url: `${DELETE_SUBSCRIPTION_API}/${id}`,
-  });
-
-  return response.data;
-};
-
-export const toggleSubscriptionStatus = async (id, body) => {
-  const response = await apiConnector({
-    method: "PATCH",
-    url: `${UPDATE_SUBSCRIPTION_STATUS_API}/${id}/status`,
-    bodyData: body,
+    url: `${SUBSCRIPTION_PLANS_API}/${id}`,
   });
 
   return response.data;

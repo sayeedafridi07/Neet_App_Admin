@@ -60,10 +60,15 @@ export const getQuizQuestions = async (quizId, params) => {
   return response.data;
 };
 
-// Plain JSON unless an image is attached; then multipart with the image under
-// "image" and nested fields (options) JSON-encoded, since FormData is flat
-const toQuestionRequest = (body, imageFile) => {
-  if (!imageFile) return { bodyData: body };
+// Question saves from the form always go as multipart: the question image
+// under "image", the explanation image under "explanationImage", each option
+// image under "optionImage<index>", and nested fields (options) JSON-encoded,
+// since FormData is flat. Calls without files (e.g. status toggle) stay JSON
+const toQuestionRequest = (body, files) => {
+  if (!files) return { bodyData: body };
+
+  const { image, explanationImage, optionImages = {} } = files;
+  const optionEntries = Object.entries(optionImages).filter(([, f]) => f);
 
   const formData = new FormData();
   Object.entries(body).forEach(([key, value]) => {
@@ -73,7 +78,11 @@ const toQuestionRequest = (body, imageFile) => {
       typeof value === "object" ? JSON.stringify(value) : value,
     );
   });
-  formData.append("image", imageFile);
+  if (image) formData.append("image", image);
+  if (explanationImage) formData.append("explanationImage", explanationImage);
+  optionEntries.forEach(([index, file]) =>
+    formData.append(`optionImage${index}`, file),
+  );
 
   return {
     bodyData: formData,
@@ -82,21 +91,21 @@ const toQuestionRequest = (body, imageFile) => {
   };
 };
 
-export const createQuizQuestion = async (quizId, body, imageFile) => {
+export const createQuizQuestion = async (quizId, body, files) => {
   const response = await apiConnector({
     method: "POST",
     url: questionsUrl(quizId),
-    ...toQuestionRequest(body, imageFile),
+    ...toQuestionRequest(body, files),
   });
 
   return response.data;
 };
 
-export const updateQuizQuestion = async (quizId, id, body, imageFile) => {
+export const updateQuizQuestion = async (quizId, id, body, files) => {
   const response = await apiConnector({
     method: "PATCH",
     url: `${questionsUrl(quizId)}/${id}`,
-    ...toQuestionRequest(body, imageFile),
+    ...toQuestionRequest(body, files),
   });
 
   return response.data;

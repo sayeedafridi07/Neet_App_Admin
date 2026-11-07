@@ -10,10 +10,20 @@ const quizQuestionSchema = z.object({
 
   options: z
     .array(
-      z.object({
-        text: z.string().trim().min(1, "Option text is required"),
-        isCorrect: z.boolean(),
-      }),
+      z
+        .object({
+          // Existing option id, so the backend can keep its saved image
+          id: z.string().optional(),
+          text: z.string().trim(),
+          isCorrect: z.boolean(),
+          removeImage: z.boolean().optional(),
+          // Form-only flag: an image can stand in for the text
+          hasImage: z.boolean().optional(),
+        })
+        .refine((option) => option.text || option.hasImage, {
+          message: "Add option text or an image",
+          path: ["text"],
+        }),
     )
     .min(2, "A question must have at least two options")
     .max(6, "A question cannot have more than six options")
