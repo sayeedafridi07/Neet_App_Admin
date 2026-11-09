@@ -152,12 +152,13 @@ const Form = ({
           error={errors.image}
         />
         <CustomInputField
-          label="Title"
+          label="Keyword"
           isMandatory={true}
           name="title"
+          multiline
           value={formData.title}
           onChange={handleOnChange}
-          maxLength={100}
+          maxLength={500}
           placeholder="e.g. Mitochondria"
           error={errors.title}
           showLength

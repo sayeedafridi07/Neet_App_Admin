@@ -253,45 +253,39 @@ function QuestionsSection({ chapterId }) {
                       {/* Options as cards; the correct one is highlighted */}
                       <div className="mt-3 space-y-2">
                         {question.options?.map((option, i) => (
-                          <div key={option.id ?? i}>
+                          <div
+                            key={option.id ?? i}
+                            className={`flex items-start gap-3 rounded-xl border px-3 py-2 ${
+                              option.isCorrect
+                                ? "border-success bg-success/10 text-success"
+                                : "border-border bg-surface text-textSecondary"
+                            }`}
+                          >
+                            {option.isCorrect ? (
+                              <span className="bg-success text-onPrimary mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full">
+                                <Icon name="Check" size={12} />
+                              </span>
+                            ) : (
+                              <span className="border-border mt-0.5 h-5 w-5 shrink-0 rounded-full border" />
+                            )}
+                            <span className="text-textMuted font-semibold">
+                              {optionLabel(i)}.
+                            </span>
                             <div
-                              className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
-                                option.isCorrect
-                                  ? "border-success bg-success/10 text-success"
-                                  : "border-border bg-surface text-textSecondary"
+                              className={`min-w-0 flex-1 space-y-2 ${
+                                option.isCorrect ? "font-medium" : "font-normal"
                               }`}
                             >
-                              {option.isCorrect ? (
-                                <span className="bg-success text-onPrimary flex h-5 w-5 shrink-0 items-center justify-center rounded-full">
-                                  <Icon name="Check" size={12} />
-                                </span>
-                              ) : (
-                                <span className="border-border h-5 w-5 shrink-0 rounded-full border" />
+                              {option.text && (
+                                <MarkdownRenderer>{option.text}</MarkdownRenderer>
                               )}
-                              <span className="text-textMuted font-semibold">
-                                {optionLabel(i)}.
-                              </span>
-                              <div
-                                className={
-                                  option.isCorrect
-                                    ? "font-medium"
-                                    : "font-normal"
-                                }
-                              >
-                                <MarkdownRenderer>
-                                  {option.text}
-                                </MarkdownRenderer>
-                              </div>
-                            </div>
-                            {/* Outside the card so the highlight doesn't tint the image */}
-                            {option.imageUrl && (
-                              <div className="pl-11">
+                              {option.imageUrl && (
                                 <Thumbnail
                                   src={option.imageUrl}
                                   alt={`Option ${optionLabel(i)}`}
                                 />
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>

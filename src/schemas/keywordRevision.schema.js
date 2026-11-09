@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const createKeywordRevisionSchema = z.object({
-  title: z.string().trim().min(1, "Title is required"),
+  title: z.string().trim().min(1, "Keyword is required"),
 
   // Always sent; empty string means no description
   description: z.string().trim(),

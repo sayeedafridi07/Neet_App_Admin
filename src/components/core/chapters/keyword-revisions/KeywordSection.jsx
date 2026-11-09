@@ -178,7 +178,7 @@ function KeywordSection({ chapterId }) {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <SearchInput
-          placeholder="Search by title..."
+          placeholder="Search by keyword..."
           onSearch={(value) =>
             setQuery((prev) => ({ ...prev, page: 1, search: value }))
           }
@@ -216,9 +216,9 @@ function KeywordSection({ chapterId }) {
         <>
           <div className="rounded-2xl border border-gray-100 bg-white p-2">
             {/* Column header */}
-            <div className="text-textMuted grid grid-cols-[2rem_1fr_auto_auto] items-center gap-4 border-b border-gray-100 px-3 pt-1 pb-2 text-xs font-medium tracking-wider uppercase md:grid-cols-[2rem_1fr_9rem_5rem_5rem_6rem]">
+            <div className="text-textMuted grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-4 border-b border-gray-100 px-3 pt-1 pb-2 text-xs font-medium tracking-wider uppercase md:grid-cols-[2rem_minmax(0,1fr)_9rem_5rem_5rem_6rem]">
               <span className="text-center">#</span>
-              <span>Title</span>
+              <span>Keyword</span>
               <span className="hidden md:block">Updated</span>
               <span className="hidden justify-self-end md:block">Duration</span>
               <span className="justify-self-center">Status</span>
@@ -236,7 +236,7 @@ function KeywordSection({ chapterId }) {
                   <li
                     key={keyword.id}
                     onDoubleClick={() => playTrack(keyword)}
-                    className={`group grid grid-cols-[2rem_1fr_auto_auto] items-center gap-4 rounded-xl px-3 py-2 transition hover:bg-gray-50 md:grid-cols-[2rem_1fr_9rem_5rem_5rem_6rem] ${isCurrent ? "bg-primary/5" : ""}`}
+                    className={`group grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-4 rounded-xl px-3 py-2 transition hover:bg-gray-50 md:grid-cols-[2rem_minmax(0,1fr)_9rem_5rem_5rem_6rem] ${isCurrent ? "bg-primary/5" : ""}`}
                   >
                     {/* Index ↔ play button on hover */}
                     <div className="relative flex h-8 items-center justify-center">
@@ -273,7 +273,8 @@ function KeywordSection({ chapterId }) {
                       />
                       <div className="min-w-0">
                         <p
-                          className={`truncate text-sm font-semibold ${isCurrent ? "text-primary" : "text-text"}`}
+                          title={keyword.title}
+                          className={`line-clamp-2 text-sm font-semibold break-words ${isCurrent ? "text-primary" : "text-text"}`}
                         >
                           {keyword.title}
                         </p>
