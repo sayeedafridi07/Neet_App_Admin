@@ -9,6 +9,7 @@ import {
   createKeywordRevision,
   deleteKeywordRevision,
   getKeywordRevisions,
+  importKeywordRevisions,
   toggleKeywordRevisionStatus,
   updateKeywordRevision,
 } from "../../../../services/operations/keywordRevisionAPI";
@@ -23,6 +24,7 @@ import { useAudioPlayer } from "../../../common/players/useAudioPlayer";
 import ToggleSwitch from "../../../common/ToggleSwitch";
 import { EmptyState } from "../shared";
 import { formatDuration } from "../utils";
+import ImportKeywordModal from "./ImportKeywordModal";
 import ManageKeywordRevisionModal from "./ManageKeywordRevisionModal";
 
 function KeywordSection({ chapterId }) {
@@ -30,6 +32,7 @@ function KeywordSection({ chapterId }) {
   const queryClient = useQueryClient();
   const [showManageModal, setShowManageModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   const [query, setQuery] = useState({
@@ -133,6 +136,31 @@ function KeywordSection({ chapterId }) {
     }
   };
 
+  // ─── Import ───────────────────────────────────────────────────────────────
+  const { mutateAsync: importKeywordsMutation, isPending: isImporting } =
+    useMutation({
+      mutationFn: (file) => importKeywordRevisions(chapterId, file),
+      onSuccess: (res) => {
+        toast.success(res?.message || "Keywords imported successfully");
+        invalidate();
+      },
+      onError: (error) => {
+        toast.error(
+          error?.response?.data?.message || "Could not import keywords",
+        );
+      },
+    });
+
+  // Returns true on success so the modal knows to close itself
+  const handleImportKeywords = async (file) => {
+    try {
+      await importKeywordsMutation(file);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // ─── Delete ───────────────────────────────────────────────────────────────
   const openDeleteModal = (item) => {
     setSelectedItem(item);
@@ -185,11 +213,19 @@ function KeywordSection({ chapterId }) {
           resultCount={query.search && !isLoading ? total : null}
           className="w-full lg:max-w-xl"
         />
-        <CustomButton
-          title="Add Keyword"
-          iconName="Plus"
-          onClick={() => openManageModal()}
-        />
+        <div className="flex items-center gap-3">
+          <CustomButton
+            title="Import Keywords"
+            iconName="Upload"
+            onClick={() => setShowImportModal(true)}
+            className="border-primary !text-primary border bg-white"
+          />
+          <CustomButton
+            title="Add Keyword"
+            iconName="Plus"
+            onClick={() => openManageModal()}
+          />
+        </div>
       </div>
 
       {/* Track list */}
@@ -405,6 +441,14 @@ function KeywordSection({ chapterId }) {
         revision={selectedItem}
         loading={isSaving}
         onSubmit={handleSaveKeyword}
+      />
+
+      {/* Import Modal */}
+      <ImportKeywordModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        loading={isImporting}
+        onSubmit={handleImportKeywords}
       />
 
       {/* Delete Modal */}

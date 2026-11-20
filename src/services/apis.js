@@ -61,6 +61,7 @@ export const keywordRevisionEndpoints = {
   UPDATE_KEYWORD_REVISION_API: "/keyword-revisions",
   UPDATE_KEYWORD_REVISION_STATUS_API: "/keyword-revisions",
   DELETE_KEYWORD_REVISION_API: "/keyword-revisions",
+  IMPORT_KEYWORD_REVISIONS_API: "/keyword-revisions/import",
 };
 
 // Chapter quizzes are listed under a chapter: /quizzes?chapterId=&type=CHAPTER

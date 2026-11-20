@@ -7,6 +7,7 @@ const {
   UPDATE_KEYWORD_REVISION_API,
   UPDATE_KEYWORD_REVISION_STATUS_API,
   DELETE_KEYWORD_REVISION_API,
+  IMPORT_KEYWORD_REVISIONS_API,
 } = keywordRevisionEndpoints;
 
 export const getKeywordRevisions = async (chapterId, params) => {
@@ -73,6 +74,23 @@ export const deleteKeywordRevision = async (id) => {
   const response = await apiConnector({
     method: "DELETE",
     url: `${DELETE_KEYWORD_REVISION_API}/${id}`,
+  });
+
+  return response.data;
+};
+
+// Bulk import keywords from an Excel/CSV file into a chapter
+export const importKeywordRevisions = async (chapterId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("chapterId", chapterId);
+
+  const response = await apiConnector({
+    method: "POST",
+    url: IMPORT_KEYWORD_REVISIONS_API,
+    bodyData: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 0,
   });
 
   return response.data;
