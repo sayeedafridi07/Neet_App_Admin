@@ -3,6 +3,8 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { usePermissions } from "../../../../hooks/usePermissions";
 import {
+  bulkDeleteQuizQuestions,
+  bulkUpdateQuizQuestionStatus,
   createQuizQuestion,
   deleteQuizQuestion,
   getChapterQuizzes,
@@ -10,6 +12,7 @@ import {
   importQuizQuestions,
   updateQuizQuestion,
 } from "../../../../services/operations/chapterQuizAPI";
+import Checkbox from "../../../common/CheckBox";
 import CustomButton from "../../../common/CustomButton";
 import DeleteModal from "../../../common/DeleteModal";
 import Icon from "../../../common/Icon";
@@ -71,6 +74,8 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
   const [showManageModal, setShowManageModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState(null);
+  const [selection, setSelection] = useState({ key: null, ids: [] });
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["quiz-questions", quizId, query],
@@ -79,6 +84,28 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
   });
   const { questions = [], pagination = {} } = response?.data || {};
   const { total = 0, page = 1, limit = 20, totalPages = 0 } = pagination;
+
+  // Selection is scoped to the visible page/search; it resets when they change
+  const selectionKey = JSON.stringify([quizId, query]);
+  const selectedIds = selection.key === selectionKey ? selection.ids : [];
+  const setSelectedIds = (update) =>
+    setSelection((prev) => {
+      const current = prev.key === selectionKey ? prev.ids : [];
+      const ids = typeof update === "function" ? update(current) : update;
+      return { key: selectionKey, ids };
+    });
+
+  const pageIds = questions.map((q) => q.id);
+  const allSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+  const someSelected = selectedIds.length > 0 && !allSelected;
+
+  const toggleSelectAll = () => setSelectedIds(allSelected ? [] : pageIds);
+
+  const toggleSelect = (id) =>
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
 
   // Quiz summary shows the question count
   const invalidate = () => {
@@ -164,6 +191,49 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
     },
   });
 
+  const { mutate: removeQuestions, isPending: isBulkDeleting } = useMutation({
+    mutationFn: (ids) => bulkDeleteQuizQuestions(quizId, ids),
+    onSuccess: (res) => {
+      const count = res?.data?.deleted ?? selectedIds.length;
+      toast.success(`Deleted ${count} question${count === 1 ? "" : "s"}`);
+      setSelectedIds([]);
+      setShowBulkDeleteModal(false);
+      // Step back if the current page is now empty
+      if (count >= questions.length && page > 1) {
+        setQuery((prev) => ({ ...prev, page: prev.page - 1 }));
+      }
+      invalidate();
+    },
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || "Could not delete questions",
+      );
+    },
+  });
+
+  const {
+    mutate: updateStatuses,
+    isPending: isUpdatingStatuses,
+    variables: statusVariables,
+  } =
+    useMutation({
+      mutationFn: ({ ids, isActive }) =>
+        bulkUpdateQuizQuestionStatus(quizId, ids, isActive),
+      onSuccess: (res, { ids, isActive }) => {
+        const count = res?.data?.updated ?? ids.length;
+        toast.success(
+          `${isActive ? "Activated" : "Deactivated"} ${count} question${count === 1 ? "" : "s"}`,
+        );
+        setSelectedIds([]);
+        invalidate();
+      },
+      onError: (error) => {
+        toast.error(
+          error?.response?.data?.message || "Could not update status",
+        );
+      },
+    });
+
   const { mutate: toggleStatus } = useMutation({
     mutationFn: ({ id, isActive }) =>
       updateQuizQuestion(quizId, id, { isActive }),
@@ -181,6 +251,34 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
 
   const actions = (
     <div className="flex flex-wrap gap-2">
+      {selectedIds.length > 0 && (
+        <>
+          <CustomButton
+            title="Activate"
+            iconName="Eye"
+            onClick={() => updateStatuses({ ids: selectedIds, isActive: true })}
+            loading={isUpdatingStatuses && statusVariables?.isActive === true}
+            disabled={isUpdatingStatuses}
+            className="bg-success! border-success! border"
+          />
+          <CustomButton
+            title="Deactivate"
+            iconName="EyeOff"
+            onClick={() => updateStatuses({ ids: selectedIds, isActive: false })}
+            loading={isUpdatingStatuses && statusVariables?.isActive === false}
+            disabled={isUpdatingStatuses}
+            className="bg-warning! border-warning! border"
+          />
+        </>
+      )}
+      {isSuperAdmin && selectedIds.length > 0 && (
+        <CustomButton
+          title={`Delete Selected (${selectedIds.length})`}
+          iconName="Trash2"
+          onClick={() => setShowBulkDeleteModal(true)}
+          className="bg-error! border-error! border"
+        />
+      )}
       <CustomButton
         title="Upload Questions"
         iconName="FileUp"
@@ -228,7 +326,10 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
             {Array(5)
               .fill()
               .map((_, i) => (
-                <SkeletonRow key={i} columns={tableColumns.length} />
+                <SkeletonRow
+                  key={i}
+                  columns={tableColumns.length + 1}
+                />
               ))}
           </TBody>
         </Table>
@@ -237,6 +338,13 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
           <Table>
             <THead>
               <TR>
+                <TH>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    onChange={toggleSelectAll}
+                  />
+                </TH>
                 {tableColumns.map((column, index) => (
                   <TH key={index}>{column}</TH>
                 ))}
@@ -246,6 +354,12 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
               {questions.map((question, index) => {
                 return (
                   <TR key={question.id}>
+                    <TD>
+                      <Checkbox
+                        checked={selectedIds.includes(question.id)}
+                        onChange={() => toggleSelect(question.id)}
+                      />
+                    </TD>
                     {/* S.No. accounts for current page offset */}
                     <TD>{(page - 1) * limit + index + 1}</TD>
                     <TD className="text-text max-w-xl min-w-96 text-sm font-medium whitespace-normal!">
@@ -418,6 +532,17 @@ function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
       >
         Are you sure you want to delete this question? This action cannot be
         undone.
+      </DeleteModal>
+
+      <DeleteModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onDelete={() => selectedIds.length && removeQuestions(selectedIds)}
+        loading={isBulkDeleting}
+        title="Delete Questions"
+      >
+        Are you sure you want to delete {selectedIds.length} selected question
+        {selectedIds.length === 1 ? "" : "s"}? This action cannot be undone.
       </DeleteModal>
     </SectionCard>
   );

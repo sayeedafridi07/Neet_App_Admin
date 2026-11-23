@@ -6,6 +6,8 @@ import moment from "moment";
 import toast from "react-hot-toast";
 import { usePermissions } from "../../../../hooks/usePermissions";
 import {
+  bulkDeleteKeywordRevisions,
+  bulkUpdateKeywordRevisionStatus,
   createKeywordRevision,
   deleteKeywordRevision,
   getKeywordRevisions,
@@ -13,6 +15,7 @@ import {
   toggleKeywordRevisionStatus,
   updateKeywordRevision,
 } from "../../../../services/operations/keywordRevisionAPI";
+import Checkbox from "../../../common/CheckBox";
 import CustomButton from "../../../common/CustomButton";
 import DeleteModal from "../../../common/DeleteModal";
 import Icon from "../../../common/Icon";
@@ -34,6 +37,8 @@ function KeywordSection({ chapterId }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [selection, setSelection] = useState({ key: null, ids: [] });
 
   const [query, setQuery] = useState({
     page: 1,
@@ -48,6 +53,32 @@ function KeywordSection({ chapterId }) {
   });
   const { keywordRevisions = [], pagination = {} } = response?.data || {};
   const { total = 0, page = 1, limit = 10, totalPages = 0 } = pagination;
+
+  // ─── Selection ────────────────────────────────────────────────────────────
+  // Scoped to the visible page/search; it resets when they change
+  const selectionKey = JSON.stringify([chapterId, query]);
+  const selectedIds = selection.key === selectionKey ? selection.ids : [];
+  const setSelectedIds = (update) =>
+    setSelection((prev) => {
+      const current = prev.key === selectionKey ? prev.ids : [];
+      const ids = typeof update === "function" ? update(current) : update;
+      return { key: selectionKey, ids };
+    });
+
+  const pageIds = keywordRevisions.map((k) => k.id);
+  const allSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+  const someSelected = selectedIds.length > 0 && !allSelected;
+  // All selected already active → offer Deactivate; otherwise Activate
+  const allSelectedActive = keywordRevisions
+    .filter((k) => selectedIds.includes(k.id))
+    .every((k) => k.isActive);
+
+  const toggleSelectAll = () => setSelectedIds(allSelected ? [] : pageIds);
+  const toggleSelect = (id) =>
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
 
   // ─── Playback ─────────────────────────────────────────────────────────────
   const player = useAudioPlayer();
@@ -200,6 +231,46 @@ function KeywordSection({ chapterId }) {
     },
   });
 
+  // ─── Bulk actions ─────────────────────────────────────────────────────────
+  const { mutate: bulkStatusMutation, isPending: isUpdatingStatuses } =
+    useMutation({
+      mutationFn: ({ ids, isActive }) =>
+        bulkUpdateKeywordRevisionStatus(ids, isActive),
+      onSuccess: (res, { ids, isActive }) => {
+        const count = res?.data?.updated ?? ids.length;
+        toast.success(
+          `${isActive ? "Activated" : "Deactivated"} ${count} keyword${count === 1 ? "" : "s"}`,
+        );
+        setSelectedIds([]);
+        invalidate();
+      },
+      onError: (error) => {
+        toast.error(error?.response?.data?.message || "Could not update status");
+      },
+    });
+
+  const { mutate: bulkDeleteMutation, isPending: isBulkDeleting } = useMutation(
+    {
+      mutationFn: bulkDeleteKeywordRevisions,
+      onSuccess: (res, ids) => {
+        const count = res?.data?.deleted ?? ids.length;
+        toast.success(`Deleted ${count} keyword${count === 1 ? "" : "s"}`);
+        setSelectedIds([]);
+        setShowBulkDeleteModal(false);
+        // Step back if the current page is now empty
+        if (count >= keywordRevisions.length && page > 1) {
+          setQuery((prev) => ({ ...prev, page: prev.page - 1 }));
+        }
+        invalidate();
+      },
+      onError: (error) => {
+        toast.error(
+          error?.response?.data?.message || "Could not delete keywords",
+        );
+      },
+    },
+  );
+
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div>
@@ -213,7 +284,34 @@ function KeywordSection({ chapterId }) {
           resultCount={query.search && !isLoading ? total : null}
           className="w-full lg:max-w-xl"
         />
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {selectedIds.length > 0 && (
+            <CustomButton
+              title={allSelectedActive ? "Deactivate" : "Activate"}
+              iconName={allSelectedActive ? "CircleOff" : "CircleCheck"}
+              onClick={() =>
+                bulkStatusMutation({
+                  ids: selectedIds,
+                  isActive: !allSelectedActive,
+                })
+              }
+              loading={isUpdatingStatuses}
+              disabled={isUpdatingStatuses}
+              className={
+                allSelectedActive
+                  ? "!text-textSecondary border-border border bg-white"
+                  : "!text-success border-success border bg-white"
+              }
+            />
+          )}
+          {isSuperAdmin && selectedIds.length > 0 && (
+            <CustomButton
+              title={`Delete Selected (${selectedIds.length})`}
+              iconName="Trash2"
+              onClick={() => setShowBulkDeleteModal(true)}
+              className="!bg-error !border-error border"
+            />
+          )}
           <CustomButton
             title="Import Keywords"
             iconName="Upload"
@@ -238,6 +336,7 @@ function KeywordSection({ chapterId }) {
                 key={i}
                 className="flex animate-pulse items-center gap-4 p-3"
               >
+                <div className="h-5 w-5 rounded-lg bg-gray-200" />
                 <div className="h-4 w-4 rounded bg-gray-200" />
                 <div className="h-11 w-11 rounded-md bg-gray-200" />
                 <div className="flex-1 space-y-2">
@@ -252,7 +351,12 @@ function KeywordSection({ chapterId }) {
         <>
           <div className="rounded-2xl border border-gray-100 bg-white p-2">
             {/* Column header */}
-            <div className="text-textMuted grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-4 border-b border-gray-100 px-3 pt-1 pb-2 text-xs font-medium tracking-wider uppercase md:grid-cols-[2rem_minmax(0,1fr)_9rem_5rem_5rem_6rem]">
+            <div className="text-textMuted grid grid-cols-[1.25rem_2rem_minmax(0,1fr)_auto_auto] items-center gap-4 border-b border-gray-100 px-3 pt-1 pb-2 text-xs font-medium tracking-wider uppercase md:grid-cols-[1.25rem_2rem_minmax(0,1fr)_9rem_5rem_5rem_6rem]">
+              <Checkbox
+                checked={allSelected}
+                indeterminate={someSelected}
+                onChange={toggleSelectAll}
+              />
               <span className="text-center">#</span>
               <span>Keyword</span>
               <span className="hidden md:block">Updated</span>
@@ -272,8 +376,13 @@ function KeywordSection({ chapterId }) {
                   <li
                     key={keyword.id}
                     onDoubleClick={() => playTrack(keyword)}
-                    className={`group grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-4 rounded-xl px-3 py-2 transition hover:bg-gray-50 md:grid-cols-[2rem_minmax(0,1fr)_9rem_5rem_5rem_6rem] ${isCurrent ? "bg-primary/5" : ""}`}
+                    className={`group grid grid-cols-[1.25rem_2rem_minmax(0,1fr)_auto_auto] items-center gap-4 rounded-xl px-3 py-2 transition hover:bg-gray-50 md:grid-cols-[1.25rem_2rem_minmax(0,1fr)_9rem_5rem_5rem_6rem] ${isCurrent ? "bg-primary/5" : ""}`}
                   >
+                    <Checkbox
+                      checked={selectedIds.includes(keyword.id)}
+                      onChange={() => toggleSelect(keyword.id)}
+                    />
+
                     {/* Index ↔ play button on hover */}
                     <div className="relative flex h-8 items-center justify-center">
                       <span
@@ -461,6 +570,18 @@ function KeywordSection({ chapterId }) {
       >
         Are you sure you want to delete this keyword? This action cannot be
         undone.
+      </DeleteModal>
+
+      {/* Bulk Delete Modal */}
+      <DeleteModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onDelete={() => selectedIds.length && bulkDeleteMutation(selectedIds)}
+        loading={isBulkDeleting}
+        title="Delete Keywords"
+      >
+        Are you sure you want to delete {selectedIds.length} selected keyword
+        {selectedIds.length === 1 ? "" : "s"}? This action cannot be undone.
       </DeleteModal>
     </div>
   );

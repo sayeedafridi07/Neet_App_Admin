@@ -150,6 +150,16 @@ export const deleteQuizQuestion = async (quizId, id) => {
   return response.data;
 };
 
+export const bulkDeleteQuizQuestions = async (quizId, ids) => {
+  const response = await apiConnector({
+    method: "DELETE",
+    url: `${questionsUrl(quizId)}/bulk`,
+    bodyData: { ids },
+  });
+
+  return response.data;
+};
+
 // Multipart upload: the .docx goes under "file"
 export const importQuizQuestions = async (quizId, file) => {
   const formData = new FormData();
@@ -161,6 +171,16 @@ export const importQuizQuestions = async (quizId, file) => {
     bodyData: formData,
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 0,
+  });
+
+  return response.data;
+};
+
+export const bulkUpdateQuizQuestionStatus = async (quizId, ids, isActive) => {
+  const response = await apiConnector({
+    method: "PATCH",
+    url: `${questionsUrl(quizId)}/bulk/status`,
+    bodyData: { ids, isActive },
   });
 
   return response.data;

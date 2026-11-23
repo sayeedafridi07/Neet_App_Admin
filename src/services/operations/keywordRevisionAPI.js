@@ -95,3 +95,23 @@ export const importKeywordRevisions = async (chapterId, file) => {
 
   return response.data;
 };
+
+export const bulkUpdateKeywordRevisionStatus = async (ids, isActive) => {
+  const response = await apiConnector({
+    method: "PATCH",
+    url: `${UPDATE_KEYWORD_REVISION_STATUS_API}/bulk/status`,
+    bodyData: { ids, isActive },
+  });
+
+  return response.data;
+};
+
+export const bulkDeleteKeywordRevisions = async (ids) => {
+  const response = await apiConnector({
+    method: "DELETE",
+    url: `${DELETE_KEYWORD_REVISION_API}/bulk`,
+    bodyData: { ids },
+  });
+
+  return response.data;
+};

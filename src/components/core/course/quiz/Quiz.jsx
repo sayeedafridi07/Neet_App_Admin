@@ -28,7 +28,6 @@ import {
   getQuizByCourseId,
 } from "../../../../services/operations/quizAPI";
 import { useSelector } from "react-redux";
-import QuizList from "./QuizList";
 import QuizOverview from "./QuizOverview";
 import DeleteModal from "../../../common/DeleteModal";
 
@@ -173,8 +172,6 @@ const Quiz = () => {
             onToggleStatus={handleToggleStatus}
             loading={loading}
           />
-          {/* Questions List */}
-          <QuizList quizId={quizData?._id} />
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-10 text-center sm:py-16">
