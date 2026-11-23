@@ -2,7 +2,9 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import {
   createChapterQuizSchema,
+  createTestSeriesQuizSchema,
   updateChapterQuizSchema,
+  updateTestSeriesQuizSchema,
 } from "../../../../schemas/chapterQuiz.schema";
 import CustomButton from "../../../common/CustomButton";
 import CustomInputField from "../../../common/CustomInputField";
@@ -18,7 +20,7 @@ const initialState = {
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Component ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-const Form = ({ formData, setFormData, errors, setErrors, isEdit }) => {
+const Form = ({ formData, setFormData, errors, setErrors, showTitle }) => {
   function handleOnChange(event) {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -28,18 +30,17 @@ const Form = ({ formData, setFormData, errors, setErrors, isEdit }) => {
   return (
     <div className="border-primary rounded-lg border p-4 md:p-6">
       <div className="space-y-4">
-        {/* New quizzes take the chapter name; it can be renamed later */}
-        {isEdit && (
+        {/* Chapter quizzes take the chapter name; test series are named */}
+        {showTitle && (
           <CustomInputField
             label="Title"
             isMandatory={true}
             name="title"
             value={formData.title}
             onChange={handleOnChange}
-            maxLength={100}
-            placeholder="e.g. Cell Structure Practice"
+            maxLength={150}
+            placeholder="e.g. NEET Full Mock Test 1"
             error={errors.title}
-            showLength
           />
         )}
         <CustomInputField
@@ -55,11 +56,14 @@ const Form = ({ formData, setFormData, errors, setErrors, isEdit }) => {
         />
         <CustomInputField
           label="Duration (minutes)"
+          isMandatory={showTitle}
           name="durationMinutes"
           type="number"
           value={formData.durationMinutes}
           onChange={handleOnChange}
-          placeholder="Leave empty for no time limit"
+          placeholder={
+            showTitle ? "e.g. 180" : "Leave empty for no time limit"
+          }
           error={errors.durationMinutes}
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -104,8 +108,10 @@ const ModalContent = ({
   loading,
   onSubmit,
   quiz,
+  type = "CHAPTER",
 }) => {
   const isEdit = !!quiz;
+  const isTestSeries = type === "TEST_SERIES";
   const [formData, setFormData] = useState(
     isEdit
       ? {
@@ -135,9 +141,12 @@ const ModalContent = ({
         : description.trim() || undefined,
       durationMinutes: durationMinutes === "" ? undefined : durationMinutes,
     };
-    const result = isEdit
-      ? updateChapterQuizSchema.safeParse(payload)
-      : createChapterQuizSchema.safeParse({ ...payload, chapterId });
+    const result = isTestSeries
+      ? (isEdit ? updateTestSeriesQuizSchema : createTestSeriesQuizSchema)
+          .safeParse(payload)
+      : isEdit
+        ? updateChapterQuizSchema.safeParse(payload)
+        : createChapterQuizSchema.safeParse({ ...payload, chapterId });
 
     if (!result.success) {
       const fieldErrors = {};
@@ -171,7 +180,13 @@ const ModalContent = ({
       >
         <div className="mb-8 flex flex-row items-center justify-between gap-4 border-b border-gray-200 pb-4">
           <h1 className="text-text text-xl font-semibold">
-            {isEdit ? "Edit Quiz" : "Add Quiz"}
+            {isTestSeries
+              ? isEdit
+                ? "Edit Test Series"
+                : "Add Test Series"
+              : isEdit
+                ? "Edit Quiz"
+                : "Add Quiz"}
           </h1>
           <button
             type="button"
@@ -189,7 +204,7 @@ const ModalContent = ({
           setFormData={setFormData}
           errors={errors}
           setErrors={setErrors}
-          isEdit={isEdit}
+          showTitle={isTestSeries}
         />
         <div className="mt-8 flex flex-row items-center justify-end space-x-4 px-4">
           <CustomButton

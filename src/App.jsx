@@ -8,6 +8,8 @@ import Classes from "./components/core/classes/Classes";
 import Dashboard from "./components/core/dashboard/Dashboard";
 import Student from "./components/core/student/Student";
 import Subjects from "./components/core/subjects/Subjects";
+import TestSeries from "./components/core/test-series/TestSeries";
+import TestSeriesDetail from "./components/core/test-series/TestSeriesDetail";
 import Subscriptions from "./components/core/subscriptions/Subscriptions";
 import Layout from "./components/layout/Layout";
 import { usePermissions } from "./hooks/usePermissions";
@@ -54,6 +56,9 @@ function App() {
         <Route path="subjects" element={<Subjects />} />
         <Route path="chapters" element={<Chapters />} />
         <Route path="chapters/:chapterSlug" element={<ChapterDetail />} />
+
+        <Route path="test-series" element={<TestSeries />} />
+        <Route path="test-series/:quizId" element={<TestSeriesDetail />} />
 
         <Route path="subscriptions" element={<Subscriptions />} />
       </Route>

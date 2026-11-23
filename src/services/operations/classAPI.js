@@ -46,3 +46,12 @@ export const deleteClass = async (id) => {
 
   return response.data;
 };
+
+export const toggleClassPremium = async (id) => {
+  const response = await apiConnector({
+    method: "PATCH",
+    url: `${UPDATE_CLASS_API}/${id}/premium`,
+  });
+
+  return response.data;
+};

@@ -44,7 +44,7 @@ const ImportKeywordModal = ({ isOpen, onClose, loading, onSubmit }) => {
       onClick={handleClose}
     >
       <div
-        className="mx-4 w-full max-w-2xl rounded-2xl bg-white p-4"
+        className="mx-4 max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -60,8 +60,9 @@ const ImportKeywordModal = ({ isOpen, onClose, loading, onSubmit }) => {
             <Icon name="X" size={18} />
           </button>
         </div>
-        {/* Sample Download CTA */}
-        {/* <div className="border-primary/20 bg-primary/5 mb-4 flex items-center justify-between rounded-xl border p-4">
+        <div>
+          {/* Sample Download CTA */}
+          {/* <div className="border-primary/20 bg-primary/5 mb-4 flex items-center justify-between rounded-xl border p-4">
           <div>
             <h3 className="text-text text-sm font-semibold">
               Download Sample File
@@ -83,25 +84,26 @@ const ImportKeywordModal = ({ isOpen, onClose, loading, onSubmit }) => {
         </div>
         */}
 
-        {/* File Upload */}
-        <div className="border-primary rounded-xl border p-4 shadow-md md:p-6">
-          <FileDropzone
-            label="Upload File"
-            required
-            value={file}
-            onChange={handleFileChange}
-            error={error}
-            icon={excelIcon}
-            accept={{
-              "text/csv": [".csv"],
-              "application/vnd.ms-excel": [".xls"],
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                [".xlsx"],
-            }}
-            maxFileSize={10}
-            invalidTypeMessage="Only Excel and CSV files are accepted"
-            helperText="CSV, XLS, XLSX files only · Max size 10 MB"
-          />
+          {/* File Upload */}
+          <div className="border-primary rounded-xl border p-4 shadow-md md:p-6">
+            <FileDropzone
+              label="Upload File"
+              required
+              value={file}
+              onChange={handleFileChange}
+              error={error}
+              icon={excelIcon}
+              accept={{
+                "text/csv": [".csv"],
+                "application/vnd.ms-excel": [".xls"],
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                  [".xlsx"],
+              }}
+              maxFileSize={10}
+              invalidTypeMessage="Only Excel and CSV files are accepted"
+              helperText="CSV, XLS, XLSX files only · Max size 10 MB"
+            />
+          </div>
         </div>
 
         {/* Footer */}

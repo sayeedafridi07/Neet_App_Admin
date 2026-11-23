@@ -37,6 +37,7 @@ const tableColumns = [
   "School",
   "City",
   "Profile Completed",
+  "Premium",
   "Device ID",
   "Created At",
   "Updated At",
@@ -209,6 +210,18 @@ function Student() {
                   <TD className="text-text text-sm">{student.city || "-"}</TD>
                   <TD className="text-text text-sm">
                     {student.profileComplete ? "Yes" : "No"}
+                  </TD>
+                  <TD>
+                    {student.isPremium ? (
+                      <span className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold">
+                        <Icon name="Crown" size={12} />
+                        Premium
+                      </span>
+                    ) : (
+                      <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-500">
+                        Free
+                      </span>
+                    )}
                   </TD>
                   <TD className="text-text text-sm">
                     {student.deviceId || "-"}

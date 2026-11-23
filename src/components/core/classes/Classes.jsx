@@ -9,6 +9,7 @@ import {
   createClass,
   deleteClass,
   getClasses,
+  toggleClassPremium,
   updateClass,
 } from "../../../services/operations/classAPI";
 import CustomButton from "../../common/CustomButton";
@@ -16,6 +17,7 @@ import DeleteModal from "../../common/DeleteModal";
 import Icon from "../../common/Icon";
 import Pagination from "../../common/Pagination";
 import SearchInput from "../../common/SearchInput";
+import ToggleSwitch from "../../common/ToggleSwitch";
 import {
   EmptyRow,
   SkeletonRow,
@@ -32,6 +34,7 @@ const tableColumns = [
   "SNO",
   "Name",
   "Slug",
+  "Premium",
   "Created At",
   "Updated At",
   "Action",
@@ -104,6 +107,24 @@ function Classes() {
       return false;
     }
   };
+
+  // ─── Premium ──────────────────────────────────────────────────────────────
+  const {
+    mutate: togglePremiumMutation,
+    isPending: isTogglingPremium,
+    variables: togglingPremiumId,
+  } = useMutation({
+    mutationFn: toggleClassPremium,
+    onSuccess: (res) => {
+      toast.success(res?.message || "Premium status updated");
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+    },
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || "Could not update premium status",
+      );
+    },
+  });
 
   // ─── Delete ───────────────────────────────────────────────────────────────
   const openDeleteModal = (item) => {
@@ -198,6 +219,15 @@ function Classes() {
                     {classItem.name}
                   </TD>
                   <TD className="text-text text-sm">{classItem.slug}</TD>
+                  <TD>
+                    <ToggleSwitch
+                      checked={!!classItem.isPremium}
+                      disabled={
+                        isTogglingPremium && togglingPremiumId === classItem.id
+                      }
+                      onChange={() => togglePremiumMutation(classItem.id)}
+                    />
+                  </TD>
                   <TD className="text-text text-sm">
                     {moment(classItem.createdAt).format("DD MMM YYYY, hh:mm A")}
                   </TD>

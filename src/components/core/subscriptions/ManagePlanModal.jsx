@@ -5,6 +5,7 @@ import {
   toRupees,
 } from "../../../schemas/subscription.schema";
 import CustomButton from "../../common/CustomButton";
+import CustomDatePicker from "../../common/CustomDatePicker";
 import CustomInputField from "../../common/CustomInputField";
 import Icon from "../../common/Icon";
 
@@ -13,7 +14,10 @@ const initialState = {
   description: "",
   price: "",
   originalPrice: "",
+  validityType: "DURATION",
   durationDays: "",
+  expiresAt: null,
+  offerValidTill: null,
   features: "",
   order: 0,
 };
@@ -26,6 +30,11 @@ const Form = ({ formData, setFormData, errors, setErrors }) => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  }
+
+  function setField(name, value) {
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
@@ -77,17 +86,6 @@ const Form = ({ formData, setFormData, errors, setErrors }) => {
             error={errors.originalPrice}
           />
           <CustomInputField
-            label="Duration"
-            isMandatory={true}
-            type="number"
-            name="durationDays"
-            value={formData.durationDays}
-            onChange={handleOnChange}
-            placeholder="e.g. 365"
-            indicatorText="Days"
-            error={errors.durationDays}
-          />
-          <CustomInputField
             label="Display Order"
             type="number"
             name="order"
@@ -96,6 +94,67 @@ const Form = ({ formData, setFormData, errors, setErrors }) => {
             placeholder="e.g. 0"
             error={errors.order}
           />
+          <CustomDatePicker
+            label="Offer Valid Till"
+            value={formData.offerValidTill}
+            onChange={(date) =>
+              setField("offerValidTill", date ? date.toDate() : null)
+            }
+            minDate={new Date()}
+            placeholder="No offer deadline"
+            error={errors.offerValidTill}
+          />
+        </div>
+
+        {/* Validity */}
+        <div>
+          <div className="mb-2 text-sm font-medium text-gray-700">
+            Validity <span className="text-red-500">*</span>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div className="inline-flex shrink-0 self-start rounded-full border border-gray-300 p-1">
+              {[
+                { value: "DURATION", label: "Duration" },
+                { value: "FIXED_DATE", label: "Fixed Date" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setField("validityType", opt.value)}
+                  className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                    formData.validityType === opt.value
+                      ? "bg-primary text-white"
+                      : "text-text hover:bg-gray-100"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div className="min-w-0 flex-1">
+              {formData.validityType === "DURATION" ? (
+                <CustomInputField
+                  type="number"
+                  name="durationDays"
+                  value={formData.durationDays}
+                  onChange={handleOnChange}
+                  placeholder="e.g. 365"
+                  indicatorText="Days"
+                  error={errors.durationDays}
+                />
+              ) : (
+                <CustomDatePicker
+                  value={formData.expiresAt}
+                  onChange={(date) =>
+                    setField("expiresAt", date ? date.toDate() : null)
+                  }
+                  minDate={new Date()}
+                  placeholder="Plan expires on"
+                  error={errors.expiresAt}
+                />
+              )}
+            </div>
+          </div>
         </div>
         <CustomInputField
           label="Features (one per line)"
@@ -123,7 +182,12 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
           price: data.price != null ? toRupees(data.price) : "",
           originalPrice:
             data.originalPrice != null ? toRupees(data.originalPrice) : "",
+          validityType: data.validityType || "DURATION",
           durationDays: data.durationDays ?? "",
+          expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+          offerValidTill: data.offerValidTill
+            ? new Date(data.offerValidTill)
+            : null,
           features: (data.features || []).join("\n"),
           order: data.order ?? 0,
         }
@@ -173,10 +237,10 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
     >
       {/* Modal content box */}
       <div
-        className="mx-4 w-full max-w-xl rounded-2xl bg-white p-4"
+        className="mx-4 max-h-[95vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-8 flex flex-row items-center justify-between gap-4 border-b border-gray-200 pb-4">
+        <div className="mb-4 flex flex-row items-center justify-between gap-4 border-b border-gray-200 pb-4 sm:mb-8">
           <h1 className="text-text text-xl font-semibold">
             {isEditMode ? "Edit Plan" : "Add Plan"}
           </h1>
@@ -190,13 +254,15 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
           </button>
         </div>
 
-        <Form
-          formData={formData}
-          setFormData={setFormData}
-          errors={errors}
-          setErrors={setErrors}
-        />
-        <div className="mt-8 flex flex-row items-center justify-end space-x-4 px-4">
+        <div>
+          <Form
+            formData={formData}
+            setFormData={setFormData}
+            errors={errors}
+            setErrors={setErrors}
+          />
+        </div>
+        <div className="mt-4 flex sm:mt-8 flex-row items-center justify-end space-x-4 px-4">
           <CustomButton
             title={"Cancel"}
             onClick={handleClose}

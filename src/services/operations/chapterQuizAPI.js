@@ -28,6 +28,36 @@ export const createChapterQuiz = async (body) => {
   return response.data;
 };
 
+// ─── Test series: standalone quizzes (no chapter), type=TEST_SERIES ─────────
+export const getTestSeriesQuizzes = async (params) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: GET_CHAPTER_QUIZZES_API,
+    params: { ...params, type: "TEST_SERIES" },
+  });
+
+  return response.data;
+};
+
+export const createTestSeriesQuiz = async (body) => {
+  const response = await apiConnector({
+    method: "POST",
+    url: CREATE_CHAPTER_QUIZ_API,
+    bodyData: { ...body, type: "TEST_SERIES" },
+  });
+
+  return response.data;
+};
+
+export const getQuizById = async (id) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: `${GET_CHAPTER_QUIZZES_API}/${id}`,
+  });
+
+  return response.data;
+};
+
 export const updateChapterQuiz = async (id, body) => {
   const response = await apiConnector({
     method: "PATCH",

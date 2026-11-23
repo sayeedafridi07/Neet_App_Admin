@@ -38,7 +38,8 @@ const tableColumns = [
   "SNO",
   "Name",
   "Price",
-  "Duration",
+  "Validity",
+  "Offer Till",
   "Order",
   "Status",
   "Created At",
@@ -212,6 +213,7 @@ function Plans() {
           title="Add Plan"
           iconName="Plus"
           onClick={() => openManageModal()}
+          className="min-w-fit"
         />
       </div>
 
@@ -271,7 +273,14 @@ function Plans() {
                       )}
                   </TD>
                   <TD className="text-text text-sm">
-                    {subscription.durationDays} days
+                    {subscription.validityType === "FIXED_DATE"
+                      ? `Until ${moment(subscription.expiresAt).format("DD MMM YYYY")}`
+                      : `${subscription.durationDays} days`}
+                  </TD>
+                  <TD className="text-text text-sm">
+                    {subscription.offerValidTill
+                      ? moment(subscription.offerValidTill).format("DD MMM YYYY")
+                      : "—"}
                   </TD>
                   <TD className="text-text text-sm">{subscription.order}</TD>
                   <TD>

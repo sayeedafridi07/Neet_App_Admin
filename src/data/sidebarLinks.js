@@ -40,6 +40,12 @@ export const sidebarLinks = [
   },
   {
     id: 7,
+    name: "Test Series",
+    path: "test-series",
+    icon: "NotebookPen",
+  },
+  {
+    id: 8,
     name: "Subscription Management",
     path: "subscriptions",
     icon: "CreditCard",

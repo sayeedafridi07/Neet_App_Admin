@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-const marks = z.coerce.number().int("Marks must be a whole number");
+// Empty input must fail, not coerce to 0
+const marks = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.coerce
+    .number({ error: "Marks are required" })
+    .int("Marks must be a whole number"),
+);
 
 const createChapterQuizSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
@@ -28,4 +34,24 @@ const updateChapterQuizSchema = createChapterQuizSchema
   // Empty string clears the description on update
   .extend({ description: z.string().trim().optional() });
 
-export { createChapterQuizSchema, updateChapterQuizSchema };
+// Test series are timed, so duration is required
+const testSeriesDuration = z.coerce
+  .number({ error: "Duration is required" })
+  .int()
+  .min(1, "Duration must be a positive number of minutes");
+
+// Test series quizzes are standalone, so no chapterId
+const createTestSeriesQuizSchema = createChapterQuizSchema
+  .omit({ chapterId: true })
+  .extend({ durationMinutes: testSeriesDuration });
+
+const updateTestSeriesQuizSchema = updateChapterQuizSchema.extend({
+  durationMinutes: testSeriesDuration,
+});
+
+export {
+  createChapterQuizSchema,
+  createTestSeriesQuizSchema,
+  updateChapterQuizSchema,
+  updateTestSeriesQuizSchema,
+};

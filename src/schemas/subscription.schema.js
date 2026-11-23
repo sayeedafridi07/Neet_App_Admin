@@ -3,6 +3,13 @@ import { z } from "zod";
 // Form values are in rupees; convert with toPaise() before sending to the API.
 const emptyToNull = (v) => (v === "" || v === undefined ? null : v);
 
+const VALIDITY_TYPES = ["DURATION", "FIXED_DATE"];
+
+const optionalDate = z.preprocess(
+  emptyToNull,
+  z.coerce.date({ invalid_type_error: "Invalid date" }).nullable(),
+);
+
 const subscriptionPlanSchema = z
   .object({
     name: z.string().trim().min(1, "Name is required"),
@@ -17,10 +24,17 @@ const subscriptionPlanSchema = z
         .min(0, "Original price cannot be negative")
         .nullable(),
     ),
-    durationDays: z.coerce
-      .number({ invalid_type_error: "Duration must be a number" })
-      .int("Duration must be a whole number")
-      .min(1, "Duration must be at least 1 day"),
+    validityType: z.enum(VALIDITY_TYPES, { message: "Select a validity type" }),
+    durationDays: z.preprocess(
+      emptyToNull,
+      z.coerce
+        .number({ invalid_type_error: "Duration must be a number" })
+        .int("Duration must be a whole number")
+        .min(1, "Duration must be at least 1 day")
+        .nullable(),
+    ),
+    expiresAt: optionalDate,
+    offerValidTill: optionalDate,
     features: z.array(z.string().trim().min(1)).default([]),
     order: z.coerce
       .number({ invalid_type_error: "Order must be a number" })
@@ -28,15 +42,37 @@ const subscriptionPlanSchema = z
       .min(0, "Order cannot be negative")
       .default(0),
   })
-  .refine(
-    (data) => data.originalPrice === null || data.originalPrice >= data.price,
-    {
-      message: "Original price must be at least the price",
-      path: ["originalPrice"],
-    },
+  .superRefine((data, ctx) => {
+    if (data.originalPrice !== null && data.originalPrice < data.price) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Original price must be at least the price",
+        path: ["originalPrice"],
+      });
+    }
+    if (data.validityType === "DURATION" && data.durationDays === null) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Duration is required",
+        path: ["durationDays"],
+      });
+    }
+    if (data.validityType === "FIXED_DATE" && data.expiresAt === null) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Expiry date is required",
+        path: ["expiresAt"],
+      });
+    }
+  })
+  // Only send the field that matches the chosen validity type
+  .transform((data) =>
+    data.validityType === "DURATION"
+      ? { ...data, expiresAt: null }
+      : { ...data, durationDays: null },
   );
 
 const toPaise = (rupees) => Math.round(Number(rupees) * 100);
 const toRupees = (paise) => (paise ?? 0) / 100;
 
-export { subscriptionPlanSchema, toPaise, toRupees };
+export { subscriptionPlanSchema, toPaise, toRupees, VALIDITY_TYPES };

@@ -52,16 +52,18 @@ const Thumbnail = ({ src, alt }) => (
   </a>
 );
 
-function QuestionsSection({ chapterId }) {
+// Pass `chapterId` to load the chapter's quiz, or pass `quiz` directly (test
+// series) along with `quizQueryKey` so the question count refreshes
+function QuestionsSection({ chapterId, quiz: quizProp, quizQueryKey }) {
   const { isSuperAdmin } = usePermissions();
   const queryClient = useQueryClient();
   const { data: quizResponse } = useQuery({
     queryKey: ["quizzes", chapterId],
     queryFn: () => getChapterQuizzes(chapterId, { page: 1, limit: 1 }),
-    enabled: !!chapterId,
+    enabled: !!chapterId && !quizProp,
   });
   // A chapter has a single quiz
-  const quiz = quizResponse?.data?.quizzes?.[0];
+  const quiz = quizProp ?? quizResponse?.data?.quizzes?.[0];
   const quizId = quiz?.id;
 
   const [query, setQuery] = useState({ page: 1, limit: 20, search: "" });
@@ -81,7 +83,9 @@ function QuestionsSection({ chapterId }) {
   // Quiz summary shows the question count
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["quiz-questions", quizId] });
-    queryClient.invalidateQueries({ queryKey: ["quizzes", chapterId] });
+    queryClient.invalidateQueries({
+      queryKey: quizQueryKey ?? ["quizzes", chapterId],
+    });
   };
 
   const openModal = (question = null) => {

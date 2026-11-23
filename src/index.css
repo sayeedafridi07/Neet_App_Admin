@@ -115,3 +115,13 @@ input[type="number"] {
   margin: 0.5rem 0;
   overflow-x: auto;
 }
+
+/* react-date-range: match theme colors */
+.rdrDayToday .rdrDayNumber span:after {
+  background: var(--color-primary);
+}
+.rdrDayHovered .rdrDayStartPreview,
+.rdrDayHovered .rdrDayEndPreview,
+.rdrDayHovered .rdrDayInPreview {
+  border-color: var(--color-primary);
+}
