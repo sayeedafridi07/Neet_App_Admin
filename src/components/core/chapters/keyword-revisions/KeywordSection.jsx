@@ -69,10 +69,6 @@ function KeywordSection({ chapterId }) {
   const allSelected =
     pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
   const someSelected = selectedIds.length > 0 && !allSelected;
-  // All selected already active → offer Deactivate; otherwise Activate
-  const allSelectedActive = keywordRevisions
-    .filter((k) => selectedIds.includes(k.id))
-    .every((k) => k.isActive);
 
   const toggleSelectAll = () => setSelectedIds(allSelected ? [] : pageIds);
   const toggleSelect = (id) =>
@@ -232,22 +228,25 @@ function KeywordSection({ chapterId }) {
   });
 
   // ─── Bulk actions ─────────────────────────────────────────────────────────
-  const { mutate: bulkStatusMutation, isPending: isUpdatingStatuses } =
-    useMutation({
-      mutationFn: ({ ids, isActive }) =>
-        bulkUpdateKeywordRevisionStatus(ids, isActive),
-      onSuccess: (res, { ids, isActive }) => {
-        const count = res?.data?.updated ?? ids.length;
-        toast.success(
-          `${isActive ? "Activated" : "Deactivated"} ${count} keyword${count === 1 ? "" : "s"}`,
-        );
-        setSelectedIds([]);
-        invalidate();
-      },
-      onError: (error) => {
-        toast.error(error?.response?.data?.message || "Could not update status");
-      },
-    });
+  const {
+    mutate: bulkStatusMutation,
+    isPending: isUpdatingStatuses,
+    variables: statusVariables,
+  } = useMutation({
+    mutationFn: ({ ids, isActive }) =>
+      bulkUpdateKeywordRevisionStatus(ids, isActive),
+    onSuccess: (res, { ids, isActive }) => {
+      const count = res?.data?.updated ?? ids.length;
+      toast.success(
+        `${isActive ? "Activated" : "Deactivated"} ${count} keyword${count === 1 ? "" : "s"}`,
+      );
+      setSelectedIds([]);
+      invalidate();
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Could not update status");
+    },
+  });
 
   const { mutate: bulkDeleteMutation, isPending: isBulkDeleting } = useMutation(
     {
@@ -286,30 +285,39 @@ function KeywordSection({ chapterId }) {
         />
         <div className="flex flex-wrap items-center gap-3">
           {selectedIds.length > 0 && (
-            <CustomButton
-              title={allSelectedActive ? "Deactivate" : "Activate"}
-              iconName={allSelectedActive ? "CircleOff" : "CircleCheck"}
-              onClick={() =>
-                bulkStatusMutation({
-                  ids: selectedIds,
-                  isActive: !allSelectedActive,
-                })
-              }
-              loading={isUpdatingStatuses}
-              disabled={isUpdatingStatuses}
-              className={
-                allSelectedActive
-                  ? "!text-textSecondary border-border border bg-white"
-                  : "!text-success border-success border bg-white"
-              }
-            />
+            <>
+              <CustomButton
+                title="Activate"
+                iconName="Eye"
+                onClick={() =>
+                  bulkStatusMutation({ ids: selectedIds, isActive: true })
+                }
+                loading={
+                  isUpdatingStatuses && statusVariables?.isActive === true
+                }
+                disabled={isUpdatingStatuses}
+                className="bg-success! border-success! border"
+              />
+              <CustomButton
+                title="Deactivate"
+                iconName="EyeOff"
+                onClick={() =>
+                  bulkStatusMutation({ ids: selectedIds, isActive: false })
+                }
+                loading={
+                  isUpdatingStatuses && statusVariables?.isActive === false
+                }
+                disabled={isUpdatingStatuses}
+                className="bg-warning! border-warning! border"
+              />
+            </>
           )}
           {isSuperAdmin && selectedIds.length > 0 && (
             <CustomButton
               title={`Delete Selected (${selectedIds.length})`}
               iconName="Trash2"
               onClick={() => setShowBulkDeleteModal(true)}
-              className="!bg-error !border-error border"
+              className="bg-error! border-error! border"
             />
           )}
           <CustomButton
