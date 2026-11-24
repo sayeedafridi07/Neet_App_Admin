@@ -10,6 +10,7 @@ import Icon from "../../common/Icon";
 
 const initialState = {
   name: "",
+  order: "1",
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Component ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,6 +35,16 @@ const Form = ({ formData, setFormData, errors, setErrors }) => {
           error={errors.name}
           showLength
         />
+        <CustomInputField
+          label="Order"
+          isMandatory={true}
+          name="order"
+          type="number"
+          value={formData.order}
+          onChange={handleOnChange}
+          placeholder="e.g. 1"
+          error={errors.order}
+        />
       </div>
     </div>
   );
@@ -44,7 +55,7 @@ const ModalContent = ({ onClose, data, loading, onSubmit }) => {
   const isEditMode = !!data;
 
   const [formData, setFormData] = useState(() =>
-    data ? { name: data.name || "" } : initialState,
+    data ? { name: data.name || "", order: data.order ?? "" } : initialState,
   );
   const [errors, setErrors] = useState({});
 
