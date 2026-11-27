@@ -61,7 +61,7 @@ function CustomInputField({
             } ${radius ?? "rounded-2xl"} ${
               error ? "border-error" : "border-border"
             } focus:ring-primary focus:ring-1 focus:outline-none ${
-              indicatorText ? "pr-24" : ""
+              indicatorText ? "pr-12" : ""
             }`}
           />
         ) : (

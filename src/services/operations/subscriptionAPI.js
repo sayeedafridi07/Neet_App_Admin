@@ -1,7 +1,8 @@
 import { apiConnector } from "../apiconnector";
 import { subscriptionPlanEndpoints } from "../apis";
 
-const { SUBSCRIPTION_PLANS_API } = subscriptionPlanEndpoints;
+const { SUBSCRIPTION_PLANS_API, SUBSCRIPTIONS_API, PAYMENTS_API } =
+  subscriptionPlanEndpoints;
 
 // ─── Subscription Plans ─────────────────────────────────────────────────────
 // Note: all prices are in paise on the API side.
@@ -59,6 +60,48 @@ export const deleteSubscriptionPlan = async (id) => {
   const response = await apiConnector({
     method: "DELETE",
     url: `${SUBSCRIPTION_PLANS_API}/${id}`,
+  });
+
+  return response.data;
+};
+
+// ─── Subscriptions (admin) ─────────────────────────────────────────────────────────
+
+export const getSubscriptions = async (params) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: SUBSCRIPTIONS_API,
+    params,
+  });
+
+  return response.data;
+};
+
+export const getSubscriptionById = async (id) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: `${SUBSCRIPTIONS_API}/${id}`,
+  });
+
+  return response.data;
+};
+
+// ─── Payments (admin) ─────────────────────────────────────────────────────────
+
+export const getPayments = async (params) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: PAYMENTS_API,
+    params,
+  });
+
+  return response.data;
+};
+
+export const getPaymentById = async (id) => {
+  const response = await apiConnector({
+    method: "GET",
+    url: `${PAYMENTS_API}/${id}`,
   });
 
   return response.data;

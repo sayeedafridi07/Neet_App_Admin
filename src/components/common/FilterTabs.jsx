@@ -1,16 +1,18 @@
-
-const FilterTabs = ({ options, selectedFilter, onFilterChange }) => {
+const FilterTabs = ({ options, selectedFilter, onFilterChange, className = "" }) => {
   return (
-    <div className="inline-flex flex-row items-center rounded-lg shadow">
-      {options.map((option, index) => (
+    <div
+      className={`inline-flex shrink-0 flex-row items-center self-start rounded-2xl border border-border bg-surface p-1 ${className}`}
+    >
+      {options.map((option) => (
         <button
           key={option.value}
+          type="button"
           onClick={() => onFilterChange(option.value)}
-          className={`cursor-pointer px-4 py-2.5 whitespace-nowrap transition-colors ${
+          className={`cursor-pointer rounded-2xl px-4 py-1.5 text-sm font-medium whitespace-nowrap transition ${
             selectedFilter === option.value
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-border bg-surface text-textSecondary hover:bg-section"
-          } ${index === 0 ? "rounded-l-lg border-l" : ""} ${index === options.length - 1 ? "rounded-r-lg border-r" : ""} border-t border-b text-sm leading-tight font-medium`}
+              ? "bg-primary text-onPrimary"
+              : "text-textSecondary hover:bg-primary/10 hover:text-primary"
+          }`}
         >
           {option.label}
         </button>

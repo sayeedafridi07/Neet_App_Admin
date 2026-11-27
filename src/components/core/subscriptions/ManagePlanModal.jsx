@@ -7,6 +7,7 @@ import {
 import CustomButton from "../../common/CustomButton";
 import CustomDatePicker from "../../common/CustomDatePicker";
 import CustomInputField from "../../common/CustomInputField";
+import FilterTabs from "../../common/FilterTabs";
 import Icon from "../../common/Icon";
 
 const initialState = {
@@ -112,25 +113,14 @@ const Form = ({ formData, setFormData, errors, setErrors }) => {
             Validity <span className="text-red-500">*</span>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            <div className="inline-flex shrink-0 self-start rounded-full border border-gray-300 p-1">
-              {[
+            <FilterTabs
+              options={[
                 { value: "DURATION", label: "Duration" },
                 { value: "FIXED_DATE", label: "Fixed Date" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setField("validityType", opt.value)}
-                  className={`cursor-pointer rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                    formData.validityType === opt.value
-                      ? "bg-primary text-white"
-                      : "text-text hover:bg-gray-100"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+              ]}
+              selectedFilter={formData.validityType}
+              onFilterChange={(value) => setField("validityType", value)}
+            />
             <div className="min-w-0 flex-1">
               {formData.validityType === "DURATION" ? (
                 <CustomInputField

@@ -159,4 +159,6 @@ export const programEndpoints = {
 
 export const subscriptionPlanEndpoints = {
   SUBSCRIPTION_PLANS_API: "/subscriptions/plans",
+  SUBSCRIPTIONS_API: "/subscriptions",
+  PAYMENTS_API: "/subscriptions/payments",
 };
